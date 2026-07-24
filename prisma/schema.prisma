@@ -1,6 +1,7 @@
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 generator client {
@@ -60,6 +61,7 @@ model User {
   influencerProfile InfluencerProfile?
   brandProfile      BrandProfile?
   aiAgentThreads    AIAgentThread[]
+  sentChatMessages  ChatMessage[]   @relation("SentMessages")
 
   @@map("users")
 }
@@ -156,8 +158,22 @@ model Deal {
   updatedAt    DateTime          @updatedAt @map("updated_at")
 
   aiAgentThreads AIAgentThread[]
+  chatMessages   ChatMessage[]
 
   @@map("deals")
+}
+
+model ChatMessage {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  dealId    String   @map("deal_id") @db.Uuid
+  deal      Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  senderId  String   @map("sender_id") @db.Uuid
+  sender    User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  text      String   @db.Text
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("chat_messages")
 }
 
 model AIAgentThread {
