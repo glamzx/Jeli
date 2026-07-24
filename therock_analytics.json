@@ -1,0 +1,20 @@
+{
+  "influencer": {
+    "username": "@therock",
+    "nickname": "The Rock",
+    "bio": "CEO of #RockTok\nLife's so much sweeter when you're not an asshole",
+    "verified": true,
+    "total_followers": 79500000,
+    "total_likes": 673900000,
+    "total_videos_count": 553
+  },
+  "analyzed_sample": {
+    "sample_size": 0,
+    "avg_views_per_video": 0,
+    "avg_likes_per_video": 0,
+    "avg_engagement_rate": "0.0%"
+  },
+  "top_hashtags": [],
+  "top_performing_videos": [],
+  "videos": []
+}

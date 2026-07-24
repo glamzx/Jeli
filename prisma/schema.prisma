@@ -1,0 +1,187 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  INFLUENCER
+  BRAND
+  ADMIN
+}
+
+enum AccountStatus {
+  PENDING_ONBOARDING
+  ACTIVE
+  SUSPENDED
+}
+
+enum SocialPlatform {
+  YOUTUBE
+  INSTAGRAM
+  TIKTOK
+  X
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+}
+
+enum DealStatus {
+  PROPOSAL
+  NEGOTIATION
+  CONTRACT_SIGNED
+  DELIVERED
+  PAID
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+model User {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email         String          @unique
+  passwordHash  String?         @map("password_hash")
+  role          UserRole
+  fullName      String          @map("full_name")
+  avatarUrl     String?         @map("avatar_url")
+  status        AccountStatus   @default(PENDING_ONBOARDING)
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+
+  influencerProfile InfluencerProfile?
+  brandProfile      BrandProfile?
+  aiAgentThreads    AIAgentThread[]
+
+  @@map("users")
+}
+
+model InfluencerProfile {
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String          @unique @map("user_id") @db.Uuid
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio            String?         @db.Text
+  niches         String[]        @default([])
+  primaryCountry String?         @map("primary_country")
+  rateCard       Json?           @default("{}") @map("rate_card")
+  aiPersonaConfig Json?          @default("{}") @map("ai_persona_config")
+  createdAt      DateTime        @default(now()) @map("created_at")
+
+  socialAccounts SocialAccount[]
+  deals          Deal[]
+
+  @@map("influencer_profiles")
+}
+
+model BrandProfile {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String      @unique @map("user_id") @db.Uuid
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName   String      @map("company_name")
+  websiteUrl    String?     @map("website_url")
+  industry      String
+  companySize   String?     @map("company_size")
+  monthlyBudget String?     @map("monthly_budget")
+  createdAt     DateTime    @default(now()) @map("created_at")
+
+  campaigns     Campaign[]
+
+  @@map("brand_profiles")
+}
+
+model SocialAccount {
+  id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  influencerId   String         @map("influencer_id") @db.Uuid
+  influencer     InfluencerProfile @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  platform       SocialPlatform
+  handle         String
+  platformUserId String         @map("platform_user_id")
+  accessToken    String?        @map("access_token") @db.Text
+  refreshToken   String?        @map("refresh_token") @db.Text
+  tokenExpiresAt DateTime?      @map("token_expires_at")
+  followerCount  BigInt         @default(0) @map("follower_count")
+  engagementRate Decimal        @default(0.00) @map("engagement_rate") @db.Decimal(5, 2)
+
+  analyticsSnapshots AnalyticsSnapshot[]
+
+  @@map("social_accounts")
+}
+
+model AnalyticsSnapshot {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  socialAccountId String        @map("social_account_id") @db.Uuid
+  socialAccount   SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+  followers       BigInt
+  avgViews        BigInt        @default(0) @map("avg_views")
+  avgLikes        BigInt        @default(0) @map("avg_likes")
+  avgComments     BigInt        @default(0) @map("avg_comments")
+  recordedAt      DateTime      @default(now()) @map("recorded_at")
+
+  @@map("analytics_snapshots")
+}
+
+model Campaign {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  brandId      String         @map("brand_id") @db.Uuid
+  brand        BrandProfile   @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  title        String
+  description  String         @db.Text
+  budgetTotal  Decimal?       @map("budget_total") @db.Decimal(12, 2)
+  targetNiches String[]       @default([]) @map("target_niches")
+  status       CampaignStatus @default(DRAFT)
+  createdAt    DateTime       @default(now()) @map("created_at")
+
+  deals        Deal[]
+
+  @@map("campaigns")
+}
+
+model Deal {
+  id           String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  campaignId   String            @map("campaign_id") @db.Uuid
+  campaign     Campaign          @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  influencerId String            @map("influencer_id") @db.Uuid
+  influencer   InfluencerProfile @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  agreedPayout Decimal?          @map("agreed_payout") @db.Decimal(12, 2)
+  status       DealStatus        @default(PROPOSAL)
+  contractUrl  String?           @map("contract_url") @db.Text
+  updatedAt    DateTime          @updatedAt @map("updated_at")
+
+  aiAgentThreads AIAgentThread[]
+
+  @@map("deals")
+}
+
+model AIAgentThread {
+  id        String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String          @map("user_id") @db.Uuid
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dealId    String?         @map("deal_id") @db.Uuid
+  deal      Deal?           @relation(fields: [dealId], references: [id], onDelete: SetNull)
+  title     String
+  createdAt DateTime        @default(now()) @map("created_at")
+
+  messages  AIAgentMessage[]
+
+  @@map("ai_agent_threads")
+}
+
+model AIAgentMessage {
+  id         String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  threadId   String        @map("thread_id") @db.Uuid
+  thread     AIAgentThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  senderRole MessageRole   @map("sender_role")
+  content    String        @db.Text
+  tokensUsed Int?          @map("tokens_used")
+  createdAt  DateTime      @default(now()) @map("created_at")
+
+  @@map("ai_agent_messages")
+}

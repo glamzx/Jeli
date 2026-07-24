@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jeli — AI-платформа инфлюенс-маркетинга в Казахстане</title>
+  <meta name="description" content="Реклама через инфлюенсеров — без хаоса и посредников. Умный AI-мэтчинг бизнеса и блогеров, безопасность через escrow и прозрачная аналитика.">
+  <!-- Modern Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="light-theme">
+
+  <!-- Header Navigation -->
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="#" class="brand-logo">Jeli.</a>
+
+      <nav class="nav-menu">
+        <a href="#how-it-works">Как работает</a>
+        <a href="#for-business">Бизнесу</a>
+        <a href="#for-influencers">Инфлюенсерам</a>
+        <a href="#pricing">Цены</a>
+        <a href="#contacts">Контакты</a>
+      </nav>
+
+      <div class="nav-actions">
+        <button id="themeToggleBtn" class="icon-btn" title="Переключить тему">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
+        <button class="text-btn">Войти</button>
+        <button class="pill-btn primary-black-btn" onclick="scrollToMatcher()">Начать бесплатно</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-container">
+      
+      <div class="hero-badge">
+        <span>AI-платформа инфлюенс-маркетинга в Казахстане</span>
+      </div>
+
+      <h1 class="hero-title">
+        Реклама через<br>
+        инфлюенсеров — без<br>
+        хаоса и посредников
+      </h1>
+
+      <p class="hero-accent-subtitle">
+        Будущее рекламы — без менеджеров.
+      </p>
+
+      <p class="hero-description">
+        Jeli соединяет бизнес и инфлюенсеров напрямую: умный мэтчинг, весь цикл сделки внутри платформы и защита денег через escrow. Мы берём процент с успешных сделок и предлагаем подписку на полный функционал — чем больше честных интеграций, тем совпадают наши интересы с вашими.
+      </p>
+
+      <div class="hero-tags">
+        <span>Подбор</span>
+        <span class="dot">•</span>
+        <span>Сделки</span>
+        <span class="dot">•</span>
+        <span>Аналитика</span>
+        <span class="dot">•</span>
+        <span>Безопасность</span>
+      </div>
+
+      <div class="hero-cta-group">
+        <button class="hero-btn dark-btn" onclick="scrollToMatcher()">Запустить кампанию</button>
+        <button class="hero-btn light-btn" onclick="openInfluencerModal()">Я инфлюенсер</button>
+      </div>
+
+      <p class="hero-subcaption">
+        Пример экрана: так может выглядеть карточка в каталоге (данные реальные, анализируются AI в режиме реального времени).
+      </p>
+
+    </div>
+  </section>
+
+  <!-- AI Business Matcher Campaign Tool Section -->
+  <section id="ai-matcher" class="matcher-section">
+    <div class="section-container">
+      
+      <div class="matcher-card">
+        <div class="matcher-header">
+          <div class="matcher-badge">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            <span>Умный AI-Мэтчинг Jeli</span>
+          </div>
+          <h2>Подберите идеальных инфлюенсеров для вашего бизнеса</h2>
+          <p>Опишите ваш продукт или стартап. Наш AI спасёт вас от хаоса, автоматически проанализирует контент блогеров и рассчитает многокритериальное совпадение.</p>
+        </div>
+
+        <form id="campaignForm" class="matcher-form">
+          <div class="form-group">
+            <label for="businessDescription">Описание вашего бизнеса / стартапа / продукта:</label>
+            <textarea id="businessDescription" rows="4" placeholder="Например: Мы разрабатываем SaaS-платформу автоматизации маркетинга в Казахстане для малого и среднего бизнеса. Ищем блогеров в сфере IT, предпринимательства и технологий..." required>Мы запускаем стартап Jeli — AI-платформу инфлюенс-маркетинга в Казахстане для автоматического выбора инфлюенсеров и проведения сделок через безопасный escrow. Ищем IT, бизнес и технологических блогеров для продвижения.</textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group half">
+              <label for="targetNiche">Целевая ниша продукта:</label>
+              <select id="targetNiche">
+                <option value="Все ниши">Все ниши</option>
+                <option value="IT, Гаджеты, AI & Технологии">IT & Технологии</option>
+                <option value="Бизнес, Финансы, Инвестиции">Бизнес & Финансы</option>
+                <option value="Развлечения, Челленджи, Шоу">Развлечения & Шоу</option>
+                <option value="Фитнес, ЗОЖ, Спорт & Мотивация">Фитнес & Спорт</option>
+                <option value="Красота, Уход, Косметика">Красота & Бьюти</option>
+              </select>
+            </div>
+
+            <div class="form-group half">
+              <label for="budgetInput">Планируемый бюджет (₸ / $):</label>
+              <input type="text" id="budgetInput" placeholder="Например: 500,000 ₸" value="500,000 ₸">
+            </div>
+          </div>
+
+          <button type="submit" id="submitMatcherBtn" class="submit-ai-btn">
+            <span class="btn-text">Провести AI-анализ и подобрать блогеров</span>
+            <span class="btn-spinner hidden"></span>
+          </button>
+        </form>
+      </div>
+
+      <!-- AI Evaluation Results Display -->
+      <div id="aiResultsContainer" class="ai-results-container hidden">
+        <div class="results-header">
+          <h3>🎯 Результаты многокритериального AI-анализа Jeli</h3>
+          <p id="aiResultsSummaryText">Анализ завершен успешно.</p>
+        </div>
+
+        <div id="aiMatchesGrid" class="matches-grid">
+          <!-- Dynamically populated AI match cards -->
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Influencer Catalog Section -->
+  <section class="catalog-section">
+    <div class="section-container">
+      
+      <!-- Filter Bar Tabs matching screenshot design -->
+      <div class="catalog-tab-bar">
+        <div class="tab-group">
+          <button class="tab-item active" onclick="switchTab('all')">Каталог</button>
+          <button class="tab-item" onclick="switchTab('city')">Город</button>
+          <button class="tab-item" onclick="switchTab('niche')">Ниша</button>
+        </div>
+
+        <div class="filter-controls">
+          <select id="cityFilter" class="filter-select" onchange="filterCatalog()">
+            <option value="all">Все города</option>
+            <option value="Алматы">Алматы</option>
+            <option value="Астана">Астана</option>
+          </select>
+
+          <select id="nicheFilter" class="filter-select" onchange="filterCatalog()">
+            <option value="all">Все ниши</option>
+            <option value="IT">IT & Технологии</option>
+            <option value="Бизнес">Бизнес & Финансы</option>
+            <option value="Развлечения">Развлечения</option>
+            <option value="Фитнес">Фитнес</option>
+            <option value="Красота">Красота</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Catalog Cards Grid -->
+      <div id="catalogGrid" class="catalog-grid">
+        <!-- Dynamically rendered catalog cards -->
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Deep AI Analysis & Campaign Launch Modal -->
+  <div id="analysisModal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      
+      <div id="modalContent">
+        <!-- Dynamically populated analysis details -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <span class="brand-logo">Jeli.</span>
+        <p>© 2026 Jeli Platform. Платформа инфлюенс-маркетинга в Казахстане.</p>
+      </div>
+
+      <div class="footer-links">
+        <a href="#how-it-works">Как работает</a>
+        <a href="#for-business">Бизнесу</a>
+        <a href="#for-influencers">Инфлюенсерам</a>
+        <a href="#pricing">Цены</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

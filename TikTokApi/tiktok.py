@@ -390,7 +390,10 @@ class TikTokApi:
             a, b = random.randint(1, 50), random.randint(100, 200)
 
             await page.mouse.move(x, y)
-            await page.wait_for_load_state("networkidle")
+            try:
+                await page.wait_for_load_state("networkidle", timeout=5000)
+            except Exception:
+                pass
             await page.mouse.move(a, b)
 
             session = TikTokPlaywrightSession(

@@ -1,0 +1,20 @@
+{
+  "influencer": {
+    "username": "@therock",
+    "nickname": "The Rock",
+    "bio": "CEO of #RockTok\nLife's so much sweeter when you're not an asshole",
+    "hashtags_in_bio": [
+      "rocktok"
+    ],
+    "verified": true,
+    "avatar_url": "https://p16-common-sign.tiktokcdn.com/tos-maliva-avt-0068/7310325298631802885~tplv-tiktokx-cropcenter:720:720.jpeg?dr=14579&refresh_token=dc6a8dcb&x-expires=1785099600&x-signature=YwLzT1v95P%2B%2FjoReDevswhU1th4%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=my3",
+    "metrics": {
+      "followers": 79500000,
+      "following": 0,
+      "total_likes": 673900000,
+      "total_videos": 553,
+      "likes_per_follower_ratio": 8.48,
+      "avg_likes_per_video": 1218626
+    }
+  }
+}

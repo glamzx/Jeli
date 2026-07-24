@@ -1,0 +1,31 @@
+[
+  {
+    "jeli_platform": "Jeli Marketing Network",
+    "influencer": {
+      "username": "@mrbeast",
+      "nickname": "MrBeast",
+      "bio": "Checkout My New Book!👇",
+      "verified": true,
+      "avatar_url": "https://p16-common-sign.tiktokcdn.com/tos-maliva-avt-0068/1e2348ca19d394037718e3b1d3fc2958~tplv-tiktokx-cropcenter:720:720.jpeg?dr=14579&refresh_token=70f6aff8&x-expires=1785099600&x-signature=fYBP4FWhc9zfg87x6iiGYvNNZ8s%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=my3",
+      "metrics": {
+        "followers": 129500000,
+        "following": 354,
+        "total_likes": 1300000000,
+        "total_videos": 464,
+        "avg_likes_per_video": 2801724,
+        "influencer_tier": "Mega"
+      }
+    },
+    "content_intelligence": {
+      "primary_niche": "General Content",
+      "top_keywords": [
+        "checkout",
+        "new",
+        "book"
+      ],
+      "top_hashtags": [],
+      "content_summary": "Influencer @mrbeast creates content primarily focused on General Content."
+    },
+    "video_samples": []
+  }
+]

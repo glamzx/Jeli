@@ -1,0 +1,40 @@
+{
+  "jeli_match_report": {
+    "influencer_username": "@therock",
+    "nickname": "The Rock",
+    "bio": "CEO of #RockTok\nLife's so much sweeter when you're not an asshole",
+    "verified": true,
+    "exact_metrics": {
+      "exact_followers_count": 79500000,
+      "exact_following_count": 0,
+      "exact_total_likes_count": 673900000,
+      "exact_total_videos_count": 553
+    },
+    "content_summary": {
+      "video_content_summary": "Influencer @therock has published 553 videos with 673900000 total likes. Analyzed 0 video samples.",
+      "captions_summary": "CEO of #RockTok\nLife's so much sweeter when you're not an asshole",
+      "analyzed_sample_count": 0
+    },
+    "business_alignment": {
+      "business_request_text": "Rocktok CEO brand sponsorship and sweet life products",
+      "alignment_score_pct": "60.0%",
+      "alignment_level": "High Alignment 🔥 (Strong Marketing Fit)",
+      "matched_keyword_count": 3,
+      "matched_keywords": [
+        {
+          "keyword": "life",
+          "exact_count_in_content": 1
+        },
+        {
+          "keyword": "rocktok",
+          "exact_count_in_content": 1
+        },
+        {
+          "keyword": "ceo",
+          "exact_count_in_content": 1
+        }
+      ]
+    },
+    "exact_video_samples": []
+  }
+}
