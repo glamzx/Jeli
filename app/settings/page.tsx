@@ -63,6 +63,14 @@ export default function SettingsPage() {
   // Danger zone
   const [deletePassword, setDeletePassword] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [tiktokConfig, setTiktokConfig] = useState<any>(null);
+
+  useEffect(() => {
+    fetch("/api/v1/auth/tiktok/config")
+      .then(r => r.json())
+      .then(setTiktokConfig)
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("jeli_user");
@@ -98,7 +106,7 @@ export default function SettingsPage() {
       const reason = params.get("reason") || "unknown";
       let text = `Не удалось привязать TikTok: ${reason}`;
       if (reason.toLowerCase().includes("client_key") || reason.toLowerCase().includes("client key")) {
-        text = "TikTok: ошибка client_key. Если приложение в Sandbox — добавьте ваш TikTok аккаунт в Test Users (TikTok Developer Portal → App → Test Users). Также проверьте Redirect URI: https://jeli-six.vercel.app/api/v1/auth/tiktok/callback";
+        text = "TikTok: ошибка client_key. Добавьте ваш TikTok аккаунт в Target Users (Sandbox) в Developer Portal.";
       }
       setMessage({ type: "error", text });
       setActiveTab("connections");
@@ -633,13 +641,19 @@ export default function SettingsPage() {
                     </button>
 
                     <div className="mt-4 p-4 rounded-xl bg-blue-500/5 border border-blue-500/15 text-xs text-slate-600 dark:text-slate-400 space-y-1.5">
-                      <p className="font-semibold text-[#0064FF]">Настройка TikTok (Sandbox — приложение pending):</p>
-                      <p>1. Откройте <a href="https://developers.tiktok.com/app/7666345825798391809" target="_blank" rel="noopener noreferrer" className="text-[#0064FF] underline">ваше приложение</a> → переключите на <strong>Sandbox</strong></p>
-                      <p>2. Credentials → скопируйте <strong>Sandbox Client Key</strong> и <strong>Client Secret</strong> (отличаются от Production!)</p>
-                      <p>3. Login Kit → Web → Redirect URI (точно):</p>
-                      <p><code className="bg-slate-100 dark:bg-slate-800 px-1 rounded block mt-1">https://jeli-six.vercel.app/api/v1/auth/tiktok/callback/</code></p>
-                      <p>4. Sandbox settings → Target users → Add account (ваш TikTok)</p>
-                      <p>5. Войдите тем же TikTok аккаунтом, который добавили в Target users</p>
+                      <p className="font-semibold text-[#0064FF]">
+                        {tiktokConfig?.useSandbox ? "Настройка TikTok (Sandbox)" : "Настройка TikTok OAuth"}
+                        {tiktokConfig?.fullyConfigured && (
+                          <span className="ml-2 text-emerald-500">● API настроен</span>
+                        )}
+                      </p>
+                      {tiktokConfig?.redirectUri && (
+                        <p>Redirect URI: <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded">{tiktokConfig.redirectUri}</code></p>
+                      )}
+                      <p>1. Откройте <a href={`https://developers.tiktok.com/app/${tiktokConfig?.appId || "7666345825798391809"}`} target="_blank" rel="noopener noreferrer" className="text-[#0064FF] underline">TikTok Developer Portal</a> → <strong>Sandbox</strong></p>
+                      <p>2. Login Kit → Web → добавьте Redirect URI (точно как выше, со слэшем в конце)</p>
+                      <p>3. Sandbox → Target users → добавьте ваш TikTok аккаунт</p>
+                      <p>4. Войдите тем же TikTok аккаунтом, который добавили в Target users</p>
                     </div>
                   </div>
                 </div>

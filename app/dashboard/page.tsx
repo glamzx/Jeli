@@ -88,10 +88,12 @@ function DashboardContent() {
       });
       window.history.replaceState({}, "", "/dashboard");
     } else if (tiktokParam === "error") {
-      setTiktokNotification({
-        type: "error",
-        message: `Не удалось привязать TikTok: ${searchParams.get("reason") || "unknown"}`
-      });
+      const reason = searchParams.get("reason") || "unknown";
+      let msg = `Не удалось привязать TikTok: ${reason}`;
+      if (reason.toLowerCase().includes("client_key")) {
+        msg = "TikTok client_key: добавьте ваш аккаунт в Target Users (Sandbox) в TikTok Developer Portal, затем попробуйте снова.";
+      }
+      setTiktokNotification({ type: "error", message: msg });
       window.history.replaceState({}, "", "/dashboard");
     }
   }, [router, searchParams]);

@@ -98,7 +98,7 @@ export default function OnboardingPage() {
 
   const handleTikTokLink = () => {
     if (registeredUserId) {
-      window.location.href = `/api/v1/auth/tiktok?userId=${registeredUserId}`;
+      window.location.href = `/api/v1/auth/tiktok?userId=${registeredUserId}&returnTo=dashboard`;
     }
   };
 
@@ -439,12 +439,19 @@ export default function OnboardingPage() {
             </div>
 
             {/* Skip button */}
-            <button
-              onClick={() => router.push("/dashboard")}
-              className="text-sm text-slate-500 dark:text-slate-400 hover:text-[#0064FF] transition-colors font-medium"
-            >
-              Пропустить и перейти в кабинет →
-            </button>
+              <button
+                onClick={() => router.push("/dashboard")}
+                className="text-sm text-slate-500 dark:text-slate-400 hover:text-[#0064FF] transition-colors font-medium"
+              >
+                Пропустить и перейти в кабинет →
+              </button>
+
+              <p className="mt-6 text-xs text-slate-400 max-w-sm mx-auto">
+                Sandbox: добавьте ваш TikTok в Target Users на{" "}
+                <a href="https://developers.tiktok.com/app/7666345825798391809" target="_blank" rel="noopener noreferrer" className="text-[#0064FF] underline">
+                  developers.tiktok.com
+                </a>
+              </p>
           </motion.div>
         )}
       </AnimatePresence>
