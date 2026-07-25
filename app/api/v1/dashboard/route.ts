@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { supabase } from '@/lib/supabase';
 import { influencerStore, brandStore } from '@/lib/store';
 
 export const dynamic = 'force-dynamic';
@@ -13,6 +14,20 @@ export async function GET() {
     let totalDeals = 0;
     let recentDeals: any[] = [];
 
+    // Query Supabase REST API
+    try {
+      const { count: sbUsersCount } = await supabase.from("users").select("*", { count: "exact", head: true });
+      const { count: sbInfCount } = await supabase.from("influencer_profiles").select("*", { count: "exact", head: true });
+      const { count: sbBrandCount } = await supabase.from("brand_profiles").select("*", { count: "exact", head: true });
+
+      if (sbUsersCount !== null) totalUsers = Math.max(totalUsers, sbUsersCount);
+      if (sbInfCount !== null) totalInfluencers = Math.max(totalInfluencers, sbInfCount);
+      if (sbBrandCount !== null) totalBrands = Math.max(totalBrands, sbBrandCount);
+    } catch (sbErr) {
+      console.warn("Supabase REST stats fetch note:", sbErr);
+    }
+
+    // Query Prisma DB fallback
     try {
       const dbUsersCount = await prisma.user.count();
       const dbInfCount = await prisma.influencerProfile.count();
@@ -25,24 +40,8 @@ export async function GET() {
       totalBrands = Math.max(totalBrands, dbBrandCount);
       totalCampaigns = dbCampCount;
       totalDeals = dbDealCount;
-
-      recentDeals = await prisma.deal.findMany({
-        take: 5,
-        include: {
-          campaign: true,
-          influencer: {
-            include: {
-              user: true,
-              socialAccounts: true
-            }
-          }
-        },
-        orderBy: {
-          updatedAt: 'desc'
-        }
-      });
-    } catch (err) {
-      console.warn("Prisma dashboard fetch warning (Handled):", err);
+    } catch (prismaErr) {
+      console.warn("Prisma stats fetch note:", prismaErr);
     }
 
     return NextResponse.json({

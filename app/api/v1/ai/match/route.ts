@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { supabase } from '@/lib/supabase';
 import { influencerStore } from '@/lib/store';
 
 export const dynamic = 'force-dynamic';
@@ -14,38 +15,60 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "businessDescription is required" }, { status: 400 });
     }
 
-    // 1. Fetch from Prisma DB
-    let dbCandidates: any[] = [];
-    try {
-      const dbInfluencers = await prisma.influencerProfile.findMany({
-        include: {
-          user: true,
-          socialAccounts: true
-        }
-      });
+    const candidatesMap = new Map();
 
-      dbCandidates = dbInfluencers.map(inf => {
-        const social = inf.socialAccounts[0] || {};
-        const followers = Number(social.followerCount || 0);
-        return {
-          id: inf.id,
-          username: social.handle || `@${inf.user.fullName.toLowerCase().replace(/\s+/g, '')}`,
-          nickname: inf.user.fullName,
-          niche: inf.niches.length > 0 ? inf.niches.join(', ') : 'Разное',
-          followers: followers,
-          bio: inf.bio || ''
-        };
-      });
-    } catch (err) {
-      console.warn("Prisma DB match fetch warning (Handled):", err);
+    // 1. Fetch registered creators from Supabase Database via REST API
+    try {
+      const { data: sbProfiles } = await supabase
+        .from("influencer_profiles")
+        .select("*, users!user_id(*), social_accounts(*)");
+
+      if (sbProfiles && sbProfiles.length > 0) {
+        sbProfiles.forEach(inf => {
+          const u = inf.users || {};
+          const s = Array.isArray(inf.social_accounts) && inf.social_accounts.length > 0 ? inf.social_accounts[0] : {};
+          const username = s.handle || `@${(u.full_name || 'influencer').toLowerCase().replace(/\s+/g, '')}`;
+          candidatesMap.set(username.toLowerCase(), {
+            id: inf.id,
+            username,
+            nickname: u.full_name || 'Инфлюенсер',
+            niche: Array.isArray(inf.niches) && inf.niches.length > 0 ? inf.niches.join(', ') : 'Разное',
+            followers: Number(s.follower_count || 25000),
+            bio: inf.bio || ''
+          });
+        });
+      }
+    } catch (sbErr) {
+      console.warn("Supabase REST match query warning:", sbErr);
     }
 
-    // 2. Combine with runtime influencerStore
-    const combinedCandidatesMap = new Map();
-    dbCandidates.forEach(c => combinedCandidatesMap.set(c.username.toLowerCase(), c));
+    // 2. Fetch from Prisma DB
+    try {
+      const dbInfluencers = await prisma.influencerProfile.findMany({
+        include: { user: true, socialAccounts: true }
+      });
+      dbInfluencers.forEach(inf => {
+        const social = inf.socialAccounts[0] || {};
+        const username = social.handle || `@${inf.user.fullName.toLowerCase().replace(/\s+/g, '')}`;
+        if (!candidatesMap.has(username.toLowerCase())) {
+          candidatesMap.set(username.toLowerCase(), {
+            id: inf.id,
+            username,
+            nickname: inf.user.fullName,
+            niche: inf.niches.length > 0 ? inf.niches.join(', ') : 'Разное',
+            followers: Number(social.followerCount || 0),
+            bio: inf.bio || ''
+          });
+        }
+      });
+    } catch (err) {
+      console.warn("Prisma DB match fetch note:", err);
+    }
+
+    // 3. Combine runtime store
     influencerStore.forEach(c => {
-      if (!combinedCandidatesMap.has(c.username.toLowerCase())) {
-        combinedCandidatesMap.set(c.username.toLowerCase(), {
+      if (!candidatesMap.has(c.username.toLowerCase())) {
+        candidatesMap.set(c.username.toLowerCase(), {
           id: c.id,
           username: c.username,
           nickname: c.nickname,
@@ -56,19 +79,19 @@ export async function POST(request: Request) {
       }
     });
 
-    const candidates = Array.from(combinedCandidatesMap.values());
+    const candidates = Array.from(candidatesMap.values());
 
-    // 3. If zero candidates exist in database or runtime store
+    // 4. Zero registered candidates
     if (candidates.length === 0) {
       return NextResponse.json({
         analyzed_at: new Date().toISOString(),
         business_summary: `Анализ для: "${businessDescription.slice(0, 80)}"`,
         matches: [],
-        message: "Подходящих инфлюенсеров пока нет. Зарегистрируйтесь на платформе, чтобы попасть в базу!"
+        message: "Подходящих инфлюенсеров пока нет. Зарегистрируйтесь как инфлюенсер, чтобы попасть в базу!"
       });
     }
 
-    // 4. Gemini AI Evaluation
+    // 5. Gemini AI Evaluation
     let aiEvaluationText = "";
     if (GEMINI_API_KEY && GEMINI_API_KEY !== "your_gemini_api_key_here") {
       try {
@@ -88,7 +111,7 @@ export async function POST(request: Request) {
                   Зарегистрированные кандидаты:
                   ${JSON.stringify(candidates)}
 
-                  Оцените соответствие кандидатов от 0 до 100 и дайте короткие рекомендации на русском языке.`
+                  Оцените соответствие кандидатов от 0 до 100 и дайте рекомендации по интеграции на русском языке.`
                 }]
               }]
             })
@@ -104,7 +127,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // 5. Multi-criteria score matching algorithm
+    // 6. Multi-criteria score calculation
     const words = (businessDescription + " " + (targetNiche || "")).toLowerCase().split(/\s+/);
     
     const matches = candidates.map(inf => {
@@ -152,7 +175,6 @@ export async function POST(request: Request) {
       };
     });
 
-    // 6. Filter by niche if requested
     let filteredMatches = matches;
     if (targetNiche && targetNiche !== "Все ниши") {
       filteredMatches = matches.filter(m => m.niche.toLowerCase().includes(targetNiche.toLowerCase()) || m.overall_alignment_score >= 70);
