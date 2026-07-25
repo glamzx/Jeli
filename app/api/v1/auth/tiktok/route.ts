@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getTikTokOAuthConfig, TIKTOK_AUTH_URL } from '@/lib/tiktok-oauth';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,10 +14,9 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'userId is required' }, { status: 400 });
     }
 
-    const clientKey = process.env.TIKTOK_CLIENT_KEY;
-    const redirectUri = process.env.TIKTOK_REDIRECT_URI;
+    const config = getTikTokOAuthConfig();
 
-    if (!clientKey || !redirectUri) {
+    if (!config.isConfigured) {
       return NextResponse.json(
         {
           error: 'TikTok API не настроен',
@@ -26,7 +26,6 @@ export async function GET(request: Request) {
       );
     }
 
-    // Generate CSRF state token with user ID embedded
     const statePayload = JSON.stringify({
       userId,
       returnTo: returnTo === 'settings' ? 'settings' : 'dashboard',
@@ -35,14 +34,13 @@ export async function GET(request: Request) {
     });
     const state = Buffer.from(statePayload).toString('base64url');
 
-    // TikTok v2 OAuth authorization URL
-    const scopes = ['user.info.basic', 'user.info.profile', 'user.info.stats'];
-    const authUrl = new URL('https://www.tiktok.com/v2/auth/authorize/');
-    authUrl.searchParams.set('client_key', clientKey);
-    authUrl.searchParams.set('scope', scopes.join(','));
+    const authUrl = new URL(TIKTOK_AUTH_URL);
+    authUrl.searchParams.set('client_key', config.clientKey!);
+    authUrl.searchParams.set('scope', config.scopeString);
     authUrl.searchParams.set('response_type', 'code');
-    authUrl.searchParams.set('redirect_uri', redirectUri);
+    authUrl.searchParams.set('redirect_uri', config.redirectUri!);
     authUrl.searchParams.set('state', state);
+    authUrl.searchParams.set('disable_auto_auth', '1');
 
     return NextResponse.redirect(authUrl.toString());
   } catch (error: any) {

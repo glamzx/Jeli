@@ -95,10 +95,13 @@ export default function SettingsPage() {
       setActiveTab("connections");
       window.history.replaceState({}, "", "/settings");
     } else if (tiktokParam === "error") {
-      setMessage({
-        type: "error",
-        text: `Не удалось привязать TikTok: ${params.get("reason") || "unknown"}`
-      });
+      const reason = params.get("reason") || "unknown";
+      let text = `Не удалось привязать TikTok: ${reason}`;
+      if (reason.toLowerCase().includes("client_key") || reason.toLowerCase().includes("client key")) {
+        text = "TikTok: ошибка client_key. Если приложение в Sandbox — добавьте ваш TikTok аккаунт в Test Users (TikTok Developer Portal → App → Test Users). Также проверьте Redirect URI: https://jeli-six.vercel.app/api/v1/auth/tiktok/callback";
+      }
+      setMessage({ type: "error", text });
+      setActiveTab("connections");
       window.history.replaceState({}, "", "/settings");
     }
   }, [router]);
@@ -628,6 +631,14 @@ export default function SettingsPage() {
                       {tiktokAccount?.linked ? "Переподключить TikTok" : "Привязать TikTok аккаунт"}
                       <ExternalLink className="w-3.5 h-3.5" />
                     </button>
+
+                    <div className="mt-4 p-4 rounded-xl bg-blue-500/5 border border-blue-500/15 text-xs text-slate-600 dark:text-slate-400 space-y-1.5">
+                      <p className="font-semibold text-[#0064FF]">Если TikTok показывает ошибку client_key:</p>
+                      <p>1. В <a href="https://developers.tiktok.com" target="_blank" rel="noopener noreferrer" className="text-[#0064FF] underline">TikTok Developer Portal</a> → ваше приложение → Login Kit</p>
+                      <p>2. Redirect URI: <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded">https://jeli-six.vercel.app/api/v1/auth/tiktok/callback</code></p>
+                      <p>3. Sandbox режим — добавьте аккаунт в Test Users</p>
+                      <p>4. Включите scope user.info.basic</p>
+                    </div>
                   </div>
                 </div>
               )}
