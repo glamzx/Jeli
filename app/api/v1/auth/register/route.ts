@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabase, supabaseAdmin } from '@/lib/supabase';
 import { hashPassword } from '@/lib/crypto';
 import { validateRegistrationInput, sanitizeString, sanitizeHandle } from '@/lib/validate';
 
@@ -24,8 +24,8 @@ export async function POST(request: Request) {
     const websiteUrl = body.websiteUrl ? body.websiteUrl.trim().slice(0, 200) : null;
     const budget = sanitizeString(body.budget || '', 50);
 
-    // 2. Check if email already exists
-    const { data: existingUser } = await supabase
+    // 2. Check if user already exists in public.users table
+    const { data: existingUser } = await supabaseAdmin
       .from('users')
       .select('id')
       .eq('email', cleanEmail)
@@ -33,65 +33,72 @@ export async function POST(request: Request) {
 
     if (existingUser) {
       return NextResponse.json(
-        { success: false, message: 'Аккаунт с таким email уже существует' },
+        { success: false, message: 'Аккаунт с таким email уже существует в базе данных' },
         { status: 409 }
       );
     }
 
-    // 3. Hash password
+    // 3. Hash password for local database security
     const passwordHash = await hashPassword(body.password);
 
-    // 4. Register in Supabase Auth
-    let supabaseAuthId: string | null = null;
+    // 4. Create User DIRECTLY in Supabase Auth (auth.users) using Service Role Admin API
+    let authUserId: string | null = null;
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email: cleanEmail,
         password: body.password,
-        options: {
-          data: {
-            full_name: fullName,
-            role: role
-          }
+        email_confirm: true,
+        user_metadata: {
+          full_name: fullName,
+          role: role,
+          handle: cleanHandle,
+          niche: niche,
+          company_name: companyName
         }
       });
+
       if (authData?.user) {
-        supabaseAuthId = authData.user.id;
+        authUserId = authData.user.id;
+        console.log(`Successfully created user in Supabase Auth (auth.users): ${authUserId}`);
+      } else if (authError) {
+        console.warn('Supabase Auth Admin create warning:', authError.message);
       }
-      if (authError) {
-        console.warn('Supabase Auth notice:', authError.message);
-      }
-    } catch (authErr) {
-      console.warn('Supabase Auth exception (non-blocking):', authErr);
+    } catch (authErr: any) {
+      console.warn('Supabase Auth Admin exception:', authErr.message);
     }
 
-    // 5. Insert user into public.users table
-    const { data: userData, error: userError } = await supabase
+    // 5. Insert user into public.users table (using auth.users UUID if available, or auto-generated UUID)
+    const userPayload: any = {
+      email: cleanEmail,
+      full_name: fullName,
+      password_hash: passwordHash,
+      role: role,
+      status: 'ACTIVE',
+      updated_at: new Date().toISOString()
+    };
+    if (authUserId) {
+      userPayload.id = authUserId;
+    }
+
+    const { data: userData, error: userError } = await supabaseAdmin
       .from('users')
-      .insert({
-        email: cleanEmail,
-        full_name: fullName,
-        password_hash: passwordHash,
-        role: role,
-        status: 'ACTIVE',
-        updated_at: new Date().toISOString()
-      })
+      .insert(userPayload)
       .select()
       .single();
 
     if (userError || !userData) {
-      console.error('User insert error:', userError);
+      console.error('User insert error in public.users:', userError);
       return NextResponse.json(
-        { success: false, message: 'Ошибка при создании аккаунта: ' + (userError?.message || 'unknown') },
+        { success: false, message: 'Ошибка при сохранении пользователя: ' + (userError?.message || 'unknown') },
         { status: 500 }
       );
     }
 
     const userId = userData.id;
 
-    // 6. Create role-specific profile
+    // 6. Create role-specific profile (Influencer or Brand)
     if (role === 'INFLUENCER') {
-      // Create influencer profile — followers start at 0 until TikTok is linked
-      const { data: profileData, error: profileError } = await supabase
+      const { data: profileData, error: profileError } = await supabaseAdmin
         .from('influencer_profiles')
         .insert({
           user_id: userId,
@@ -106,9 +113,9 @@ export async function POST(request: Request) {
         console.error('Profile insert error:', profileError);
       }
 
-      // Create placeholder social account — will be updated when TikTok is linked
+      // Create initial social account record
       if (profileData && cleanHandle) {
-        const { error: socialError } = await supabase
+        const { error: socialError } = await supabaseAdmin
           .from('social_accounts')
           .insert({
             influencer_id: profileData.id,
@@ -124,8 +131,8 @@ export async function POST(request: Request) {
         }
       }
     } else {
-      // Create brand profile
-      const { error: brandError } = await supabase
+      // Create Brand profile
+      const { error: brandError } = await supabaseAdmin
         .from('brand_profiles')
         .insert({
           user_id: userId,
@@ -142,20 +149,21 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: 'Аккаунт успешно создан',
+      message: 'Пользователь успешно зарегистрирован в Supabase Auth и PostgreSQL',
       user: {
         id: userId,
         email: cleanEmail,
         fullName: fullName,
         role: role,
         status: 'ACTIVE',
-        tiktokLinked: false
+        inSupabaseAuth: !!authUserId
       }
     });
+
   } catch (error: any) {
     console.error('Registration error:', error);
     return NextResponse.json(
-      { success: false, message: 'Внутренняя ошибка сервера' },
+      { success: false, message: 'Внутренняя ошибка сервера: ' + error.message },
       { status: 500 }
     );
   }
