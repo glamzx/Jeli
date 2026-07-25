@@ -1,90 +1,55 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
-import { influencerStore } from '@/lib/store';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    let catalogData: any[] = [];
-    const combinedMap = new Map();
+    const { data: profiles, error } = await supabase
+      .from('influencer_profiles')
+      .select('*, users!user_id(*), social_accounts(*)');
 
-    // 1. Fetch from Supabase Database via REST API
-    try {
-      const { data: sbProfiles } = await supabase
-        .from("influencer_profiles")
-        .select("*, users!user_id(*), social_accounts(*)");
-
-      if (sbProfiles && sbProfiles.length > 0) {
-        sbProfiles.forEach(inf => {
-          const u = inf.users || {};
-          const s = Array.isArray(inf.social_accounts) && inf.social_accounts.length > 0 ? inf.social_accounts[0] : {};
-          const followers = Number(s.follower_count || 25000);
-          const fullName = u.full_name || 'Инфлюенсер';
-          const username = s.handle || `@${fullName.toLowerCase().replace(/\s+/g, '')}`;
-
-          const item = {
-            id: inf.id,
-            username: username,
-            nickname: fullName,
-            followers: followers,
-            totalLikes: Math.round(followers * 12.5),
-            totalVideos: Math.floor(followers / 400) + 5,
-            niche: Array.isArray(inf.niches) && inf.niches.length > 0 ? inf.niches.join(', ') : 'Разное',
-            city: inf.primary_country === 'Казахстан' ? 'Алматы' : (inf.primary_country || 'Алматы'),
-            avatar: u.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(fullName)}`,
-            verified: true,
-            bio: inf.bio || 'Зарегистрированный инфлюенсер на Jeli'
-          };
-          combinedMap.set(username.toLowerCase(), item);
-        });
-      }
-    } catch (sbErr) {
-      console.warn("Supabase REST catalog fetch warning:", sbErr);
+    if (error) {
+      console.error('Catalog fetch error:', error);
+      return NextResponse.json([]);
     }
 
-    // 2. Fetch from Prisma DB (if reachable)
-    try {
-      const dbInfluencers = await prisma.influencerProfile.findMany({
-        include: { user: true, socialAccounts: true }
-      });
-      dbInfluencers.forEach(inf => {
-        const social = inf.socialAccounts[0] || {};
-        const followers = Number(social.followerCount || 0);
-        const username = social.handle || `@${inf.user.fullName.toLowerCase().replace(/\s+/g, '')}`;
-        if (!combinedMap.has(username.toLowerCase())) {
-          combinedMap.set(username.toLowerCase(), {
-            id: inf.id,
-            username: username,
-            nickname: inf.user.fullName,
-            followers: followers,
-            totalLikes: Math.round(followers * 12.5),
-            totalVideos: Math.floor(followers / 400) + 5,
-            niche: inf.niches.length > 0 ? inf.niches.join(', ') : 'Разное',
-            city: 'Алматы',
-            avatar: inf.user.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(inf.user.fullName)}`,
-            verified: true,
-            bio: inf.bio || 'Зарегистрированный инфлюенсер на Jeli'
-          });
-        }
-      });
-    } catch (prismaErr) {
-      console.warn("Prisma catalog fetch note:", prismaErr);
+    if (!profiles || profiles.length === 0) {
+      return NextResponse.json([]);
     }
 
-    // 3. Merge runtime store items
-    influencerStore.forEach(item => {
-      if (!combinedMap.has(item.username.toLowerCase())) {
-        combinedMap.set(item.username.toLowerCase(), item);
-      }
+    const catalog = profiles.map(inf => {
+      const user = inf.users || {};
+      const socials = Array.isArray(inf.social_accounts) ? inf.social_accounts : [];
+      const primarySocial = socials.find((s: any) => s.platform === 'TIKTOK') || socials[0] || {};
+      const followers = Number(primarySocial.follower_count || 0);
+      const fullName = user.full_name || 'Инфлюенсер';
+      const handle = primarySocial.handle || `@${fullName.toLowerCase().replace(/\s+/g, '')}`;
+
+      // Determine if TikTok is verified (has real access token stored)
+      const tiktokVerified = socials.some(
+        (s: any) => s.platform === 'TIKTOK' && s.access_token && s.follower_count > 0
+      );
+
+      return {
+        id: inf.id,
+        username: handle,
+        nickname: fullName,
+        followers: followers,
+        totalLikes: Math.round(followers * 12.5),
+        totalVideos: Math.floor(followers / 400) + (followers > 0 ? 5 : 0),
+        niche: Array.isArray(inf.niches) && inf.niches.length > 0 ? inf.niches.join(', ') : 'Разное',
+        city: inf.primary_country === 'Казахстан' ? 'Алматы' : (inf.primary_country || 'Алматы'),
+        avatar: user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(fullName)}`,
+        verified: tiktokVerified,
+        bio: inf.bio || 'Зарегистрированный инфлюенсер на Jeli',
+        tiktokLinked: tiktokVerified
+      };
     });
 
-    catalogData = Array.from(combinedMap.values());
-    return NextResponse.json(catalogData);
-
+    return NextResponse.json(catalog);
   } catch (error: any) {
-    console.error("Error in catalog GET route:", error);
-    return NextResponse.json(influencerStore);
+    console.error('Catalog route error:', error);
+    return NextResponse.json([]);
   }
 }

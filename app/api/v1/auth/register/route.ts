@@ -1,197 +1,162 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
-import { influencerStore, brandStore } from '@/lib/store';
+import { hashPassword } from '@/lib/crypto';
+import { validateRegistrationInput, sanitizeString, sanitizeHandle } from '@/lib/validate';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { fullName, email, password, role, handle, niche, companyName, websiteUrl, budget } = body;
 
-    if (!email || !role || !fullName) {
-      return NextResponse.json({ message: "Укажите имя, email и тип аккаунта" }, { status: 400 });
+    // 1. Validate input
+    const validation = validateRegistrationInput(body);
+    if (!validation.valid) {
+      return NextResponse.json({ success: false, message: validation.error }, { status: 400 });
     }
 
-    const normalizedRole = role === "INFLUENCER" ? "INFLUENCER" : "BRAND";
-    const cleanEmail = email.toLowerCase().trim();
-    const cleanHandle = handle ? (handle.startsWith('@') ? handle : `@${handle}`) : `@${fullName.toLowerCase().replace(/\s+/g, '')}`;
+    const fullName = sanitizeString(body.fullName);
+    const cleanEmail = body.email.toLowerCase().trim();
+    const role = body.role === 'INFLUENCER' ? 'INFLUENCER' : 'BRAND';
+    const cleanHandle = body.role === 'INFLUENCER' ? sanitizeHandle(body.handle || body.fullName) : null;
+    const niche = sanitizeString(body.niche || 'Tech', 50);
+    const companyName = sanitizeString(body.companyName || '', 100);
+    const websiteUrl = body.websiteUrl ? body.websiteUrl.trim().slice(0, 200) : null;
+    const budget = sanitizeString(body.budget || '', 50);
 
-    // 1. Register User in Supabase Auth
-    let supabaseAuthUser = null;
+    // 2. Check if email already exists
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', cleanEmail)
+      .maybeSingle();
+
+    if (existingUser) {
+      return NextResponse.json(
+        { success: false, message: 'Аккаунт с таким email уже существует' },
+        { status: 409 }
+      );
+    }
+
+    // 3. Hash password
+    const passwordHash = await hashPassword(body.password);
+
+    // 4. Register in Supabase Auth
+    let supabaseAuthId: string | null = null;
     try {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: cleanEmail,
-        password: password || 'DefaultPass123!',
+        password: body.password,
         options: {
           data: {
             full_name: fullName,
-            role: normalizedRole,
-            handle: cleanHandle,
-            niche: niche || 'Tech',
-            company_name: companyName,
-            website_url: websiteUrl,
-            budget: budget
+            role: role
           }
         }
       });
       if (authData?.user) {
-        supabaseAuthUser = authData.user;
-      } else if (authError) {
-        console.warn("Supabase Auth sign-up notice:", authError.message);
+        supabaseAuthId = authData.user.id;
       }
-    } catch (sbAuthErr) {
-      console.warn("Supabase Auth exception:", sbAuthErr);
+      if (authError) {
+        console.warn('Supabase Auth notice:', authError.message);
+      }
+    } catch (authErr) {
+      console.warn('Supabase Auth exception (non-blocking):', authErr);
     }
 
-    // 2. Direct Write to Supabase Database Tables (users, profiles, social_accounts)
-    let registeredUserId = supabaseAuthUser?.id;
-    try {
-      const { data: userData, error: userErr } = await supabase.from("users").insert({
+    // 5. Insert user into public.users table
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .insert({
         email: cleanEmail,
         full_name: fullName,
-        role: normalizedRole,
-        status: "ACTIVE",
+        password_hash: passwordHash,
+        role: role,
+        status: 'ACTIVE',
         updated_at: new Date().toISOString()
-      }).select();
+      })
+      .select()
+      .single();
 
-      if (userData && userData.length > 0) {
-        registeredUserId = userData[0].id;
+    if (userError || !userData) {
+      console.error('User insert error:', userError);
+      return NextResponse.json(
+        { success: false, message: 'Ошибка при создании аккаунта: ' + (userError?.message || 'unknown') },
+        { status: 500 }
+      );
+    }
 
-        if (normalizedRole === "INFLUENCER") {
-          const { data: profData } = await supabase.from("influencer_profiles").insert({
-            user_id: registeredUserId,
-            bio: `Инфлюенсер в категории ${niche || 'Tech'}. Город: Алматы`,
-            niches: niche ? [niche] : ["Tech"],
-            primary_country: "Казахстан"
-          }).select();
+    const userId = userData.id;
 
-          if (profData && profData.length > 0) {
-            const followers = Math.floor(Math.random() * 45000) + 5000;
-            await supabase.from("social_accounts").insert({
-              influencer_id: profData[0].id,
-              platform: "TIKTOK",
-              handle: cleanHandle,
-              platform_user_id: cleanHandle.replace('@', ''),
-              follower_count: followers,
-              engagement_rate: 3.5
-            });
-          }
-        } else {
-          await supabase.from("brand_profiles").insert({
-            user_id: registeredUserId,
-            company_name: companyName || fullName,
-            website_url: websiteUrl || null,
-            industry: niche || "Бизнес & Маркетинг",
-            monthly_budget: budget || "250,000 ₸ – 1,000,000 ₸"
-          });
-        }
-      } else if (userErr) {
-        console.warn("Supabase DB insert notice:", userErr.message);
+    // 6. Create role-specific profile
+    if (role === 'INFLUENCER') {
+      // Create influencer profile — followers start at 0 until TikTok is linked
+      const { data: profileData, error: profileError } = await supabase
+        .from('influencer_profiles')
+        .insert({
+          user_id: userId,
+          bio: `Инфлюенсер в категории ${niche}`,
+          niches: [niche],
+          primary_country: 'Казахстан'
+        })
+        .select()
+        .single();
+
+      if (profileError) {
+        console.error('Profile insert error:', profileError);
       }
-    } catch (sbDbErr: any) {
-      console.warn("Supabase DB insert exception:", sbDbErr.message);
-    }
 
-    // 3. Fallback/Dual Sync with Prisma DB if direct socket reachable
-    let dbUser = null;
-    try {
-      dbUser = await prisma.user.create({
-        data: {
-          email: cleanEmail,
-          fullName,
-          passwordHash: password || null,
-          role: normalizedRole,
-          status: "ACTIVE",
-          ...(normalizedRole === "INFLUENCER"
-            ? {
-                influencerProfile: {
-                  create: {
-                    bio: `Инфлюенсер в категории ${niche || 'Разное'}. Город: Алматы`,
-                    niches: niche ? [niche] : ["Tech"],
-                    primaryCountry: "Казахстан",
-                    rateCard: { story: "50,000 ₸", post: "150,000 ₸", video: "250,000 ₸" },
-                    socialAccounts: {
-                      create: {
-                        platform: "TIKTOK",
-                        handle: cleanHandle,
-                        platformUserId: cleanHandle.replace('@', ''),
-                        followerCount: BigInt(Math.floor(Math.random() * 50000) + 1000),
-                        engagementRate: 3.5
-                      }
-                    }
-                  }
-                }
-              }
-            : {
-                brandProfile: {
-                  create: {
-                    companyName: companyName || fullName,
-                    websiteUrl: websiteUrl || null,
-                    industry: niche || "Бизнес & Маркетинг",
-                    monthlyBudget: budget || "250,000 ₸ – 1,000,000 ₸"
-                  }
-                }
-              })
+      // Create placeholder social account — will be updated when TikTok is linked
+      if (profileData && cleanHandle) {
+        const { error: socialError } = await supabase
+          .from('social_accounts')
+          .insert({
+            influencer_id: profileData.id,
+            platform: 'TIKTOK',
+            handle: cleanHandle,
+            platform_user_id: cleanHandle.replace('@', ''),
+            follower_count: 0,
+            engagement_rate: 0
+          });
+
+        if (socialError) {
+          console.error('Social account insert error:', socialError);
         }
-      });
-    } catch (prismaErr: any) {
-      console.warn("Prisma socket sync note (handled):", prismaErr.message);
-    }
-
-    // 4. Update Runtime Store
-    if (normalizedRole === "INFLUENCER") {
-      const followers = Math.floor(Math.random() * 45000) + 5000;
-      const newInfluencer = {
-        id: registeredUserId || dbUser?.id || "inf_" + Date.now(),
-        username: cleanHandle,
-        nickname: fullName,
-        email: cleanEmail,
-        followers: followers,
-        totalLikes: Math.round(followers * 12.5),
-        totalVideos: Math.floor(followers / 400) + 5,
-        niche: niche || 'Tech & AI',
-        city: 'Алматы',
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(fullName)}`,
-        verified: true,
-        bio: `Зарегистрированный инфлюенсер Jeli в нише ${niche || 'Tech'}.`,
-        createdAt: new Date().toISOString()
-      };
-      
-      if (!influencerStore.some(i => i.email === cleanEmail)) {
-        influencerStore.unshift(newInfluencer);
       }
     } else {
-      const newBrand = {
-        id: registeredUserId || dbUser?.id || "brd_" + Date.now(),
-        fullName,
-        email: cleanEmail,
-        companyName: companyName || fullName,
-        websiteUrl: websiteUrl || '',
-        budget: budget || '250,000 ₸ – 1,000,000 ₸',
-        createdAt: new Date().toISOString()
-      };
+      // Create brand profile
+      const { error: brandError } = await supabase
+        .from('brand_profiles')
+        .insert({
+          user_id: userId,
+          company_name: companyName || fullName,
+          website_url: websiteUrl,
+          industry: niche || 'Бизнес & Маркетинг',
+          monthly_budget: budget || '250,000 ₸ – 1,000,000 ₸'
+        });
 
-      if (!brandStore.some(b => b.email === cleanEmail)) {
-        brandStore.unshift(newBrand);
+      if (brandError) {
+        console.error('Brand profile insert error:', brandError);
       }
     }
 
     return NextResponse.json({
       success: true,
-      message: "Инфлюенсер успешно зарегистрирован в Supabase и базе данных Jeli",
+      message: 'Аккаунт успешно создан',
       user: {
-        id: registeredUserId || dbUser?.id || "usr_" + Date.now(),
+        id: userId,
         email: cleanEmail,
-        fullName,
-        role: normalizedRole,
-        status: "ACTIVE"
+        fullName: fullName,
+        role: role,
+        status: 'ACTIVE',
+        tiktokLinked: false
       }
     });
-
   } catch (error: any) {
-    console.error("Registration error:", error);
-    return NextResponse.json({ message: error.message || "Ошибка при регистрации" }, { status: 500 });
+    console.error('Registration error:', error);
+    return NextResponse.json(
+      { success: false, message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
   }
 }

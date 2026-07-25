@@ -1,0 +1,17 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/v1/ai/chat/route": "app/api/v1/ai/chat/route.js",
+  "/api/v1/chat/messages/route": "app/api/v1/chat/messages/route.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/chat/page": "app/chat/page.js",
+  "/onboarding/page": "app/onboarding/page.js",
+  "/page": "app/page.js",
+  "/api/v1/auth/register/route": "app/api/v1/auth/register/route.js",
+  "/api/v1/ai/match/route": "app/api/v1/ai/match/route.js",
+  "/api/v1/auth/tiktok/callback/route": "app/api/v1/auth/tiktok/callback/route.js",
+  "/api/catalog/route": "app/api/catalog/route.js",
+  "/api/v1/auth/tiktok/route": "app/api/v1/auth/tiktok/route.js",
+  "/api/v1/auth/tiktok/status/route": "app/api/v1/auth/tiktok/status/route.js",
+  "/api/v1/dashboard/route": "app/api/v1/dashboard/route.js",
+  "/api/v1/influencers/route": "app/api/v1/influencers/route.js"
+}
