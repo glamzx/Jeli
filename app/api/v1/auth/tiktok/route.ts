@@ -7,6 +7,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
+    const returnTo = searchParams.get('returnTo') || 'dashboard';
 
     if (!userId) {
       return NextResponse.json({ error: 'userId is required' }, { status: 400 });
@@ -28,6 +29,7 @@ export async function GET(request: Request) {
     // Generate CSRF state token with user ID embedded
     const statePayload = JSON.stringify({
       userId,
+      returnTo: returnTo === 'settings' ? 'settings' : 'dashboard',
       nonce: crypto.randomUUID(),
       timestamp: Date.now()
     });

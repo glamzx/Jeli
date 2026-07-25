@@ -271,10 +271,10 @@ export default function LandingPage() {
                     <p className="text-xs text-[#0064FF] font-semibold mb-3">{m.alignment_tier}</p>
                     <p className="text-xs text-slate-600 dark:text-slate-400 mb-4">{m.ai_content_summary}</p>
                     <Link
-                      href="/dashboard"
+                      href={m.detailUrl || `/influencer/${(m.username || '').replace(/^@/, '')}`}
                       className="block w-full text-center py-2.5 rounded-full bg-[#0064FF] text-white text-xs font-bold hover:bg-blue-600"
                     >
-                      Запустить кампанию
+                      {m.source === 'scraped' ? 'Детальный обзор' : 'Запустить кампанию'}
                     </Link>
                   </div>
                 ))}

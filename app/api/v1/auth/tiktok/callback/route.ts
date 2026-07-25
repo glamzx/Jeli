@@ -15,7 +15,15 @@ export async function GET(request: Request) {
     if (error) {
       console.error('TikTok OAuth error:', error, searchParams.get('error_description'));
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://jeli-six.vercel.app';
-      return NextResponse.redirect(`${appUrl}/dashboard?tiktok=error&reason=${encodeURIComponent(error)}`);
+      let redirectPath = '/dashboard';
+      if (state) {
+        try {
+          const decoded = Buffer.from(state, 'base64url').toString('utf-8');
+          const stateData = JSON.parse(decoded);
+          if (stateData.returnTo === 'settings') redirectPath = '/settings';
+        } catch {}
+      }
+      return NextResponse.redirect(`${appUrl}${redirectPath}?tiktok=error&reason=${encodeURIComponent(error)}`);
     }
 
     if (!code || !state) {
@@ -23,7 +31,7 @@ export async function GET(request: Request) {
     }
 
     // Decode and validate state (CSRF protection)
-    let stateData: { userId: string; nonce: string; timestamp: number };
+    let stateData: { userId: string; returnTo?: string; nonce: string; timestamp: number };
     try {
       const decoded = Buffer.from(state, 'base64url').toString('utf-8');
       stateData = JSON.parse(decoded);
@@ -163,8 +171,9 @@ export async function GET(request: Request) {
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://jeli-six.vercel.app';
+    const redirectPath = stateData.returnTo === 'settings' ? '/settings' : '/dashboard';
     return NextResponse.redirect(
-      `${appUrl}/dashboard?tiktok=linked&username=${encodeURIComponent(tiktokUsername)}&followers=${tiktokFollowers}`
+      `${appUrl}${redirectPath}?tiktok=linked&username=${encodeURIComponent(tiktokUsername)}&followers=${tiktokFollowers}`
     );
   } catch (error: any) {
     console.error('TikTok callback error:', error);
