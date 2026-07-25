@@ -1,9 +1,28 @@
 export function getTikTokOAuthConfig() {
-  const clientKey = process.env.TIKTOK_CLIENT_KEY?.trim();
-  const clientSecret = process.env.TIKTOK_CLIENT_SECRET?.trim();
-  const redirectUri = process.env.TIKTOK_REDIRECT_URI?.trim();
+  const useSandbox = process.env.TIKTOK_USE_SANDBOX !== 'false';
 
-  // Default to basic scope only — extra scopes must be enabled in TikTok Developer Portal
+  const clientKey = (
+    useSandbox
+      ? process.env.TIKTOK_SANDBOX_CLIENT_KEY || process.env.TIKTOK_CLIENT_KEY
+      : process.env.TIKTOK_CLIENT_KEY
+  )?.trim();
+
+  const clientSecret = (
+    useSandbox
+      ? process.env.TIKTOK_SANDBOX_CLIENT_SECRET || process.env.TIKTOK_CLIENT_SECRET
+      : process.env.TIKTOK_CLIENT_SECRET
+  )?.trim();
+
+  // TikTok docs examples use trailing slash; mismatch causes misleading client_key errors
+  let redirectUri = (
+    process.env.TIKTOK_REDIRECT_URI ||
+    'https://jeli-six.vercel.app/api/v1/auth/tiktok/callback/'
+  ).trim();
+
+  if (!redirectUri.endsWith('/')) {
+    redirectUri = `${redirectUri}/`;
+  }
+
   const scopes = (process.env.TIKTOK_SCOPES || 'user.info.basic')
     .split(',')
     .map(s => s.trim())
@@ -13,10 +32,13 @@ export function getTikTokOAuthConfig() {
     clientKey,
     clientSecret,
     redirectUri,
+    useSandbox,
     scopes,
     scopeString: scopes.join(','),
     isConfigured: Boolean(clientKey && redirectUri),
-    isFullyConfigured: Boolean(clientKey && clientSecret && redirectUri)
+    isFullyConfigured: Boolean(clientKey && clientSecret && redirectUri),
+    // Safe preview for diagnostics (never expose full secret)
+    clientKeyPreview: clientKey ? `${clientKey.slice(0, 4)}...${clientKey.slice(-4)}` : null
   };
 }
 

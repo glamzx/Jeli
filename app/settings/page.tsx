@@ -633,11 +633,13 @@ export default function SettingsPage() {
                     </button>
 
                     <div className="mt-4 p-4 rounded-xl bg-blue-500/5 border border-blue-500/15 text-xs text-slate-600 dark:text-slate-400 space-y-1.5">
-                      <p className="font-semibold text-[#0064FF]">Если TikTok показывает ошибку client_key:</p>
-                      <p>1. В <a href="https://developers.tiktok.com" target="_blank" rel="noopener noreferrer" className="text-[#0064FF] underline">TikTok Developer Portal</a> → ваше приложение → Login Kit</p>
-                      <p>2. Redirect URI: <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded">https://jeli-six.vercel.app/api/v1/auth/tiktok/callback</code></p>
-                      <p>3. Sandbox режим — добавьте аккаунт в Test Users</p>
-                      <p>4. Включите scope user.info.basic</p>
+                      <p className="font-semibold text-[#0064FF]">Настройка TikTok (Sandbox — приложение pending):</p>
+                      <p>1. Откройте <a href="https://developers.tiktok.com/app/7666345825798391809" target="_blank" rel="noopener noreferrer" className="text-[#0064FF] underline">ваше приложение</a> → переключите на <strong>Sandbox</strong></p>
+                      <p>2. Credentials → скопируйте <strong>Sandbox Client Key</strong> и <strong>Client Secret</strong> (отличаются от Production!)</p>
+                      <p>3. Login Kit → Web → Redirect URI (точно):</p>
+                      <p><code className="bg-slate-100 dark:bg-slate-800 px-1 rounded block mt-1">https://jeli-six.vercel.app/api/v1/auth/tiktok/callback/</code></p>
+                      <p>4. Sandbox settings → Target users → Add account (ваш TikTok)</p>
+                      <p>5. Войдите тем же TikTok аккаунтом, который добавили в Target users</p>
                     </div>
                   </div>
                 </div>
