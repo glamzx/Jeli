@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { influencerStore } from '@/lib/store';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,39 +14,61 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "businessDescription is required" }, { status: 400 });
     }
 
-    // Query real registered influencers from database
-    const dbInfluencers = await prisma.influencerProfile.findMany({
-      include: {
-        user: true,
-        socialAccounts: true
+    // 1. Fetch from Prisma DB
+    let dbCandidates: any[] = [];
+    try {
+      const dbInfluencers = await prisma.influencerProfile.findMany({
+        include: {
+          user: true,
+          socialAccounts: true
+        }
+      });
+
+      dbCandidates = dbInfluencers.map(inf => {
+        const social = inf.socialAccounts[0] || {};
+        const followers = Number(social.followerCount || 0);
+        return {
+          id: inf.id,
+          username: social.handle || `@${inf.user.fullName.toLowerCase().replace(/\s+/g, '')}`,
+          nickname: inf.user.fullName,
+          niche: inf.niches.length > 0 ? inf.niches.join(', ') : 'Разное',
+          followers: followers,
+          bio: inf.bio || ''
+        };
+      });
+    } catch (err) {
+      console.warn("Prisma DB match fetch warning (Handled):", err);
+    }
+
+    // 2. Combine with runtime influencerStore
+    const combinedCandidatesMap = new Map();
+    dbCandidates.forEach(c => combinedCandidatesMap.set(c.username.toLowerCase(), c));
+    influencerStore.forEach(c => {
+      if (!combinedCandidatesMap.has(c.username.toLowerCase())) {
+        combinedCandidatesMap.set(c.username.toLowerCase(), {
+          id: c.id,
+          username: c.username,
+          nickname: c.nickname,
+          niche: c.niche,
+          followers: c.followers,
+          bio: c.bio
+        });
       }
     });
 
-    // Zero registered influencers in database
-    if (!dbInfluencers || dbInfluencers.length === 0) {
+    const candidates = Array.from(combinedCandidatesMap.values());
+
+    // 3. If zero candidates exist in database or runtime store
+    if (candidates.length === 0) {
       return NextResponse.json({
         analyzed_at: new Date().toISOString(),
         business_summary: `Анализ для: "${businessDescription.slice(0, 80)}"`,
         matches: [],
-        message: "Подходящих инфлюенсеров пока нет. Новые блогеры появляются сразу после регистрации на платформе."
+        message: "Подходящих инфлюенсеров пока нет. Зарегистрируйтесь на платформе, чтобы попасть в базу!"
       });
     }
 
-    // Format registered influencer items
-    const candidates = dbInfluencers.map(inf => {
-      const social = inf.socialAccounts[0] || {};
-      const followers = Number(social.followerCount || 0);
-      return {
-        id: inf.id,
-        username: social.handle || `@${inf.user.fullName.toLowerCase().replace(/\s+/g, '')}`,
-        nickname: inf.user.fullName,
-        niche: inf.niches.length > 0 ? inf.niches.join(', ') : 'Разное',
-        followers: followers,
-        bio: inf.bio || ''
-      };
-    });
-
-    // Evaluate matching with Gemini API if key is present
+    // 4. Gemini AI Evaluation
     let aiEvaluationText = "";
     if (GEMINI_API_KEY && GEMINI_API_KEY !== "your_gemini_api_key_here") {
       try {
@@ -62,10 +85,10 @@ export async function POST(request: Request) {
                   Целевая ниша: "${targetNiche || 'Все ниши'}"
                   Бюджет: "${budget || 'Не указан'}"
 
-                  Кандидаты из базы:
+                  Зарегистрированные кандидаты:
                   ${JSON.stringify(candidates)}
 
-                  Оцените соответствие кандидатов в баллах от 0 до 100 и дайте рекомендации по интеграции на русском языке.`
+                  Оцените соответствие кандидатов от 0 до 100 и дайте короткие рекомендации на русском языке.`
                 }]
               }]
             })
@@ -77,20 +100,20 @@ export async function POST(request: Request) {
           aiEvaluationText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "";
         }
       } catch (geminiErr) {
-        console.error("Gemini API call warning:", geminiErr);
+        console.error("Gemini API match warning:", geminiErr);
       }
     }
 
-    // High precision matching against registered DB creators
+    // 5. Multi-criteria score matching algorithm
     const words = (businessDescription + " " + (targetNiche || "")).toLowerCase().split(/\s+/);
     
     const matches = candidates.map(inf => {
-      let score = 60;
+      let score = 65;
       const combinedText = (inf.bio + " " + inf.niche).toLowerCase();
       
       words.forEach(w => {
         if (w.length > 3 && combinedText.includes(w)) {
-          score += 15;
+          score += 12;
         }
       });
 
@@ -117,22 +140,22 @@ export async function POST(request: Request) {
           content_tone_aesthetics: Math.min(score - 2, 95),
           commercial_conversion_potential: Math.min(score + 1, 97)
         },
-        ai_content_summary: aiEvaluationText ? aiEvaluationText.slice(0, 200) + "..." : `Зарегистрированный инфлюенсер Jeli (${inf.nickname}). Ниша: ${inf.niche}. Охват: ${inf.followers.toLocaleString()} подписчиков.`,
-        recommended_campaign_angle: `Прямая интеграция в роликах ${inf.nickname} с размещением промокода и ссылки в профиле.`,
+        ai_content_summary: aiEvaluationText ? aiEvaluationText.slice(0, 180) + "..." : `Зарегистрированный инфлюенсер Jeli (${inf.nickname}). Ниша: ${inf.niche}. Охват: ${(inf.followers || 0).toLocaleString()} подписчиков.`,
+        recommended_campaign_angle: `Прямая интеграция в роликах ${inf.nickname} с размещением промокода и ссылки в шапке профиля.`,
         pros: [
           `Реальный профиль в нише "${inf.niche}"`,
           `Подтвержденный аккаунт в базе Jeli`
         ],
         cons: [
-          `Рекомендуется связаться через платформу Jeli Escrow`
+          `Рекомендуется связаться через платную безопасную сделку Escrow`
         ]
       };
     });
 
-    // Filter out low scores if niche specified
+    // 6. Filter by niche if requested
     let filteredMatches = matches;
     if (targetNiche && targetNiche !== "Все ниши") {
-      filteredMatches = matches.filter(m => m.niche.toLowerCase().includes(targetNiche.toLowerCase()) || m.overall_alignment_score >= 65);
+      filteredMatches = matches.filter(m => m.niche.toLowerCase().includes(targetNiche.toLowerCase()) || m.overall_alignment_score >= 70);
     }
 
     filteredMatches.sort((a, b) => b.overall_alignment_score - a.overall_alignment_score);
@@ -140,7 +163,7 @@ export async function POST(request: Request) {
     if (filteredMatches.length === 0) {
       return NextResponse.json({
         analyzed_at: new Date().toISOString(),
-        business_summary: `Анализ для запроса: "${businessDescription.slice(0, 80)}"`,
+        business_summary: `Анализ для: "${businessDescription.slice(0, 80)}"`,
         matches: [],
         message: "Подходящих инфлюенсеров пока нет"
       });
@@ -148,7 +171,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       analyzed_at: new Date().toISOString(),
-      business_summary: `Анализ для запроса: "${businessDescription.slice(0, 80)}"`,
+      business_summary: `Анализ для: "${businessDescription.slice(0, 80)}"`,
       matches: filteredMatches
     });
 

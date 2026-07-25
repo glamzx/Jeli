@@ -1,31 +1,49 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { influencerStore, brandStore } from '@/lib/store';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const totalUsers = await prisma.user.count();
-    const totalInfluencers = await prisma.influencerProfile.count();
-    const totalBrands = await prisma.brandProfile.count();
-    const totalCampaigns = await prisma.campaign.count();
-    const totalDeals = await prisma.deal.count();
+    let totalUsers = influencerStore.length + brandStore.length;
+    let totalInfluencers = influencerStore.length;
+    let totalBrands = brandStore.length;
+    let totalCampaigns = 0;
+    let totalDeals = 0;
+    let recentDeals: any[] = [];
 
-    const deals = await prisma.deal.findMany({
-      take: 5,
-      include: {
-        campaign: true,
-        influencer: {
-          include: {
-            user: true,
-            socialAccounts: true
+    try {
+      const dbUsersCount = await prisma.user.count();
+      const dbInfCount = await prisma.influencerProfile.count();
+      const dbBrandCount = await prisma.brandProfile.count();
+      const dbCampCount = await prisma.campaign.count();
+      const dbDealCount = await prisma.deal.count();
+
+      totalUsers = Math.max(totalUsers, dbUsersCount);
+      totalInfluencers = Math.max(totalInfluencers, dbInfCount);
+      totalBrands = Math.max(totalBrands, dbBrandCount);
+      totalCampaigns = dbCampCount;
+      totalDeals = dbDealCount;
+
+      recentDeals = await prisma.deal.findMany({
+        take: 5,
+        include: {
+          campaign: true,
+          influencer: {
+            include: {
+              user: true,
+              socialAccounts: true
+            }
           }
+        },
+        orderBy: {
+          updatedAt: 'desc'
         }
-      },
-      orderBy: {
-        updatedAt: 'desc'
-      }
-    });
+      });
+    } catch (err) {
+      console.warn("Prisma dashboard fetch warning (Handled):", err);
+    }
 
     return NextResponse.json({
       success: true,
@@ -37,7 +55,7 @@ export async function GET() {
         totalDeals,
         escrowLockedAmount: totalDeals * 150000
       },
-      recentDeals: deals
+      recentDeals
     });
   } catch (error: any) {
     return NextResponse.json({
