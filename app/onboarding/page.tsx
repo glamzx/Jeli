@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Briefcase, ArrowRight, CheckCircle2, Sparkles, Building2, Globe, DollarSign } from "lucide-react";
+import { User, Briefcase, ArrowRight, CheckCircle2, Sparkles, Building2, Globe, DollarSign, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -20,12 +20,12 @@ export default function OnboardingPage() {
   
   // Influencer specific
   const [handle, setHandle] = useState("");
-  const [niche, setNiche] = useState("Tech");
+  const [niche, setNiche] = useState("IT");
   
   // Brand specific
   const [companyName, setCompanyName] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
-  const [budget, setBudget] = useState("$5k–$20k");
+  const [budget, setBudget] = useState("250,000 ₸ – 1,000,000 ₸");
 
   const [loading, setLoading] = useState(false);
 
@@ -41,7 +41,7 @@ export default function OnboardingPage() {
   const cardVariants = {
     hidden: { opacity: 0, scale: 0.95 },
     visible: { opacity: 1, scale: 1, transition: { duration: 0.4 } },
-    hover: { scale: 1.03, translateY: -4, transition: { type: "spring", stiffness: 300 } },
+    hover: { scale: 1.02, translateY: -4, transition: { type: "spring", stiffness: 300 } },
     tap: { scale: 0.98 }
   };
 
@@ -70,22 +70,22 @@ export default function OnboardingPage() {
         router.push("/dashboard");
       } else {
         const err = await res.json();
-        alert(err.message || "Registration failed");
+        alert(err.message || "Ошибка при регистрации");
       }
     } catch (error) {
       console.error(error);
-      alert("Error processing registration");
+      alert("Не удалось завершить регистрацию");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-center items-center px-4 py-12">
+    <div className="min-h-screen bg-[#F7F8FC] dark:bg-[#0B0F19] text-slate-900 dark:text-white flex flex-col justify-center items-center px-4 py-12 transition-colors duration-300">
       
       {/* Header logo */}
       <div className="absolute top-8 left-8">
-        <Link href="/" className="text-3xl font-extrabold italic font-['Outfit'] tracking-tight text-white">
+        <Link href="/" className="text-3xl font-extrabold italic font-['Outfit'] tracking-tight text-slate-900 dark:text-white">
           Jeli.
         </Link>
       </div>
@@ -101,15 +101,15 @@ export default function OnboardingPage() {
             exit={{ opacity: 0, y: -20 }}
           >
             <div className="space-y-3">
-              <motion.div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-semibold mb-2">
+              <motion.div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[#0064FF] text-sm font-semibold mb-2">
                 <Sparkles className="w-4 h-4" />
-                Onboarding Portal
+                Портал регистрации Jeli
               </motion.div>
-              <motion.h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white">
-                Welcome to Jeli
+              <motion.h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                Добро пожаловать в Jeli
               </motion.h1>
-              <motion.p className="text-slate-400 text-lg md:text-xl max-w-xl mx-auto">
-                Select your account type to personalize your AI-powered management workflow.
+              <motion.p className="text-slate-600 dark:text-slate-400 text-base md:text-lg max-w-xl mx-auto">
+                Выберите тип аккаунта, чтобы настроить рабочий кабинет и подключиться к базе данных Jeli.
               </motion.p>
             </div>
 
@@ -122,24 +122,24 @@ export default function OnboardingPage() {
                 whileHover="hover"
                 whileTap="tap"
                 onClick={() => setSelectedRole("INFLUENCER")}
-                className={`cursor-pointer relative p-8 rounded-2xl border transition-all duration-300 ${
+                className={`cursor-pointer relative p-8 rounded-3xl border transition-all duration-300 ${
                   selectedRole === "INFLUENCER"
-                    ? "border-[#0064FF] bg-blue-950/30 shadow-[0_0_35px_rgba(0,100,255,0.35)]"
-                    : "border-slate-800 bg-slate-900/50 hover:border-slate-700"
+                    ? "border-[#0064FF] bg-blue-500/10 shadow-[0_0_35px_rgba(0,100,255,0.25)]"
+                    : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 hover:border-slate-300 dark:hover:border-slate-700"
                 }`}
               >
                 {selectedRole === "INFLUENCER" && (
                   <CheckCircle2 className="absolute top-4 right-4 text-[#0064FF] w-6 h-6" />
                 )}
-                <div className="p-3 bg-[#0064FF]/10 w-fit rounded-xl text-[#0064FF] mb-6">
+                <div className="p-3 bg-[#0064FF]/10 w-fit rounded-2xl text-[#0064FF] mb-6">
                   <User className="w-8 h-8" />
                 </div>
-                <h3 className="text-2xl font-bold mb-2">Creator / Influencer</h3>
-                <p className="text-slate-400 text-sm leading-relaxed mb-6">
-                  Automate brand inquiries, generate dynamic media kits, track performance analytics, and negotiate sponsorships with your AI Manager.
+                <h3 className="text-2xl font-bold mb-2">Креатор / Инфлюенсер</h3>
+                <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-6">
+                  Автоматизируйте рекламные запросы от брендов, получайте предложения по интеграциям и проводите сделки с гарантией оплаты через Jeli Escrow.
                 </p>
                 <span className="text-[#0064FF] font-semibold text-sm flex items-center gap-2">
-                  Continue as Creator <ArrowRight className="w-4 h-4" />
+                  Продолжить как Блогер <ArrowRight className="w-4 h-4" />
                 </span>
               </motion.div>
 
@@ -149,24 +149,24 @@ export default function OnboardingPage() {
                 whileHover="hover"
                 whileTap="tap"
                 onClick={() => setSelectedRole("BRAND")}
-                className={`cursor-pointer relative p-8 rounded-2xl border transition-all duration-300 ${
+                className={`cursor-pointer relative p-8 rounded-3xl border transition-all duration-300 ${
                   selectedRole === "BRAND"
-                    ? "border-blue-500 bg-blue-950/30 shadow-[0_0_35px_rgba(59,130,246,0.35)]"
-                    : "border-slate-800 bg-slate-900/50 hover:border-slate-700"
+                    ? "border-[#0064FF] bg-blue-500/10 shadow-[0_0_35px_rgba(0,100,255,0.25)]"
+                    : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 hover:border-slate-300 dark:hover:border-slate-700"
                 }`}
               >
                 {selectedRole === "BRAND" && (
-                  <CheckCircle2 className="absolute top-4 right-4 text-blue-400 w-6 h-6" />
+                  <CheckCircle2 className="absolute top-4 right-4 text-[#0064FF] w-6 h-6" />
                 )}
-                <div className="p-3 bg-blue-500/10 w-fit rounded-xl text-blue-400 mb-6">
+                <div className="p-3 bg-[#0064FF]/10 w-fit rounded-2xl text-[#0064FF] mb-6">
                   <Briefcase className="w-8 h-8" />
                 </div>
-                <h3 className="text-2xl font-bold mb-2">Business / Brand</h3>
-                <p className="text-slate-400 text-sm leading-relaxed mb-6">
-                  Discover vetted creators, manage influencer campaigns, analyze ROI metrics, and streamline deals with automated escrow workflows.
+                <h3 className="text-2xl font-bold mb-2">Бизнес / Бренд</h3>
+                <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-6">
+                  Находите проверенных локальных инфлюенсеров, запускайте рекламные кампании с Gemini AI и защищайте бюджет безопасным депозитом.
                 </p>
-                <span className="text-blue-400 font-semibold text-sm flex items-center gap-2">
-                  Continue as Brand <ArrowRight className="w-4 h-4" />
+                <span className="text-[#0064FF] font-semibold text-sm flex items-center gap-2">
+                  Продолжить как Бренд <ArrowRight className="w-4 h-4" />
                 </span>
               </motion.div>
 
@@ -179,16 +179,16 @@ export default function OnboardingPage() {
               className={`px-10 py-4 rounded-full font-bold text-lg transition-all duration-300 flex items-center gap-3 mx-auto ${
                 selectedRole
                   ? "bg-[#0064FF] hover:bg-blue-600 text-white shadow-lg shadow-blue-500/25 cursor-pointer transform hover:-translate-y-0.5"
-                  : "bg-slate-800 text-slate-500 cursor-not-allowed"
+                  : "bg-slate-300 dark:bg-slate-800 text-slate-500 cursor-not-allowed"
               }`}
             >
-              Proceed to Account Creation <ArrowRight className="w-5 h-5" />
+              Перейти к заполнению профиля <ArrowRight className="w-5 h-5" />
             </motion.button>
           </motion.div>
         ) : (
           <motion.div
             key="registration-form"
-            className="max-w-xl w-full bg-slate-900/80 border border-slate-800 p-8 rounded-3xl shadow-2xl backdrop-blur-xl"
+            className="max-w-xl w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-3xl shadow-2xl backdrop-blur-xl"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
@@ -196,50 +196,50 @@ export default function OnboardingPage() {
             <div className="mb-6">
               <button 
                 onClick={() => setStep("SELECT_ROLE")} 
-                className="text-sm text-slate-400 hover:text-white mb-3 inline-block"
+                className="text-sm text-[#0064FF] font-semibold hover:underline mb-3 inline-block"
               >
-                ← Back to role selection
+                ← Назад к выбору роли
               </button>
               <h2 className="text-2xl font-bold">
-                {selectedRole === "INFLUENCER" ? "Creator Registration" : "Brand / Business Registration"}
+                {selectedRole === "INFLUENCER" ? "Регистрация Инфлюенсера" : "Регистрация Бизнеса / Бренда"}
               </h2>
-              <p className="text-slate-400 text-sm mt-1">
-                Set up your account details to access the Jeli AI network.
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+                Заполните данные профиля для интеграции с базой данных Jeli.
               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
-                  Full Name
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                  Полное Имя / Название
                 </label>
                 <input
                   type="text"
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder="John Doe"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-[#0064FF]"
+                  placeholder="Аскар Смагулов"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#0064FF]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
-                  Work Email
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                  Рабочий Email
                 </label>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="john@company.com"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-[#0064FF]"
+                  placeholder="askar@company.kz"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#0064FF]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
-                  Password
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                  Пароль
                 </label>
                 <input
                   type="password"
@@ -247,7 +247,7 @@ export default function OnboardingPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-[#0064FF]"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#0064FF]"
                 />
               </div>
 
@@ -255,33 +255,33 @@ export default function OnboardingPage() {
               {selectedRole === "INFLUENCER" && (
                 <>
                   <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
-                      TikTok / Social Handle
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                      TikTok / Instagram Хэндл (@username)
                     </label>
                     <input
                       type="text"
                       required
                       value={handle}
                       onChange={(e) => setHandle(e.target.value)}
-                      placeholder="@yourhandle"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-[#0064FF]"
+                      placeholder="@tech_kazakhstan"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#0064FF]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
-                      Primary Content Category
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                      Основная категория контента
                     </label>
                     <select
                       value={niche}
                       onChange={(e) => setNiche(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#0064FF]"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:border-[#0064FF]"
                     >
-                      <option value="Tech">Tech & AI</option>
-                      <option value="Fitness">Fitness & Health</option>
-                      <option value="Business">Business & Finance</option>
-                      <option value="Beauty">Beauty & Skincare</option>
-                      <option value="Entertainment">Entertainment & Comedy</option>
+                      <option value="IT">IT & Технологии</option>
+                      <option value="Фитнес">Фитнес & ЗОЖ</option>
+                      <option value="Бизнес">Бизнес & Финансы</option>
+                      <option value="Красота">Красота & Бьюти</option>
+                      <option value="Развлечения">Развлечения & Юмор</option>
                     </select>
                   </div>
                 </>
@@ -291,44 +291,44 @@ export default function OnboardingPage() {
               {selectedRole === "BRAND" && (
                 <>
                   <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
-                      Company Name
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                      Название компании
                     </label>
                     <input
                       type="text"
                       required
                       value={companyName}
                       onChange={(e) => setCompanyName(e.target.value)}
-                      placeholder="Acme Corp"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-[#0064FF]"
+                      placeholder="KazTech Solutions"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#0064FF]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
-                      Website URL
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                      Сайт компании
                     </label>
                     <input
                       type="url"
                       value={websiteUrl}
                       onChange={(e) => setWebsiteUrl(e.target.value)}
-                      placeholder="https://example.com"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-[#0064FF]"
+                      placeholder="https://example.kz"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#0064FF]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
-                      Monthly Influencer Marketing Budget
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                      Месячный бюджет на инфлюенс-маркетинг
                     </label>
                     <select
                       value={budget}
                       onChange={(e) => setBudget(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#0064FF]"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:border-[#0064FF]"
                     >
-                      <option value="<$5k">&lt;$5,000 / mo</option>
-                      <option value="$5k–$20k">$5,000 – $20,000 / mo</option>
-                      <option value="$20k–$100k+">$20,000 – $100,000+ / mo</option>
+                      <option value="до 250,000 ₸">до 250,000 ₸ / мес</option>
+                      <option value="250,000 ₸ – 1,000,000 ₸">250,000 ₸ – 1,000,000 ₸ / мес</option>
+                      <option value="более 1,000,000 ₸">более 1,000,000 ₸ / мес</option>
                     </select>
                   </div>
                 </>
@@ -339,7 +339,7 @@ export default function OnboardingPage() {
                 disabled={loading}
                 className="w-full mt-4 py-4 rounded-xl font-bold bg-[#0064FF] hover:bg-blue-600 text-white shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2"
               >
-                {loading ? "Creating Jeli Account..." : "Create Account & Enter Platform"}
+                {loading ? "Создание аккаунта в базе данных..." : "Зарегистрироваться и войти на сайт"}
               </button>
             </form>
           </motion.div>
