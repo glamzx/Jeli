@@ -1,10 +1,27 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    if (!isSupabaseConfigured) {
+      return NextResponse.json({
+        success: false,
+        stats: {
+          totalUsers: 0,
+          totalInfluencers: 0,
+          totalBrands: 0,
+          totalVerified: 0,
+          totalCampaigns: 0,
+          totalDeals: 0,
+          escrowLockedAmount: 0
+        },
+        recentDeals: [],
+        error: 'Supabase is not configured'
+      });
+    }
+
     // Query all counts from Supabase REST API
     const [usersRes, infRes, brandRes] = await Promise.all([
       supabase.from('users').select('*', { count: 'exact', head: true }),

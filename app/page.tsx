@@ -128,7 +128,7 @@ export default function LandingPage() {
               {theme === "light" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
             </button>
 
-            <Link href="/onboarding" className="text-sm font-semibold px-4 py-2 text-slate-900 dark:text-white hover:opacity-80">
+            <Link href="/login" className="text-sm font-semibold px-4 py-2 text-slate-900 dark:text-white hover:opacity-80">
               Войти
             </Link>
 

@@ -73,6 +73,9 @@ export default function OnboardingPage() {
       const data = await res.json();
 
       if (res.ok && data.success) {
+        if (data.user) {
+          localStorage.setItem("jeli_user", JSON.stringify(data.user));
+        }
         setRegisteredUserId(data.user?.id || null);
 
         if (selectedRole === "INFLUENCER") {

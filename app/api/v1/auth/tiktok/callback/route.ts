@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { isSupabaseAdminConfigured, supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,7 +41,7 @@ export async function GET(request: Request) {
     const clientSecret = process.env.TIKTOK_CLIENT_SECRET;
     const redirectUri = process.env.TIKTOK_REDIRECT_URI;
 
-    if (!clientKey || !clientSecret || !redirectUri) {
+    if (!clientKey || !clientSecret || !redirectUri || !isSupabaseAdminConfigured) {
       return NextResponse.json({ error: 'TikTok API not configured' }, { status: 503 });
     }
 
@@ -93,7 +93,7 @@ export async function GET(request: Request) {
     const tiktokAvatar = tiktokUser.avatar_url || '';
 
     // Find user's influencer profile
-    const { data: profile } = await supabase
+    const { data: profile } = await supabaseAdmin
       .from('influencer_profiles')
       .select('id')
       .eq('user_id', stateData.userId)
@@ -106,7 +106,7 @@ export async function GET(request: Request) {
     }
 
     // Check if social account already exists for this influencer
-    const { data: existingSocial } = await supabase
+    const { data: existingSocial } = await supabaseAdmin
       .from('social_accounts')
       .select('id')
       .eq('influencer_id', profile.id)
@@ -115,7 +115,7 @@ export async function GET(request: Request) {
 
     if (existingSocial) {
       // Update existing social account with real TikTok data
-      await supabase
+      await supabaseAdmin
         .from('social_accounts')
         .update({
           handle: `@${tiktokUsername}`,
@@ -129,7 +129,7 @@ export async function GET(request: Request) {
         .eq('id', existingSocial.id);
     } else {
       // Create new social account with real TikTok data
-      await supabase
+      await supabaseAdmin
         .from('social_accounts')
         .insert({
           influencer_id: profile.id,
@@ -148,7 +148,7 @@ export async function GET(request: Request) {
     const bioUpdate: any = {};
     if (tiktokBio) bioUpdate.bio = tiktokBio;
     if (Object.keys(bioUpdate).length > 0) {
-      await supabase
+      await supabaseAdmin
         .from('influencer_profiles')
         .update(bioUpdate)
         .eq('id', profile.id);
@@ -156,7 +156,7 @@ export async function GET(request: Request) {
 
     // Update user avatar if available
     if (tiktokAvatar) {
-      await supabase
+      await supabaseAdmin
         .from('users')
         .update({ avatar_url: tiktokAvatar })
         .eq('id', stateData.userId);

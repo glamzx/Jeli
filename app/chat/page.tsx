@@ -127,7 +127,7 @@ export default function RealtimeChatPage() {
           <div 
             className="p-3 rounded-2xl bg-blue-500/10 border border-[#0064FF]/40 cursor-pointer flex items-center gap-3"
           >
-            <img src={activeChannel.avatar} className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
+            <img src={activeChannel.avatar} alt={activeChannel.influencerName} className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
             <div className="flex-1 overflow-hidden">
               <h4 className="font-bold text-sm truncate">{activeChannel.influencerName}</h4>
               <span className="text-xs text-emerald-500 font-semibold">Escrow: {activeChannel.escrowAmount}</span>
@@ -141,7 +141,7 @@ export default function RealtimeChatPage() {
           {/* Active Channel Header */}
           <div className="border-b border-slate-200 dark:border-slate-800 p-4 bg-white/60 dark:bg-slate-900/60 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <img src={activeChannel.avatar} className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
+              <img src={activeChannel.avatar} alt={activeChannel.influencerName} className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
               <div>
                 <h3 className="font-bold text-base">{activeChannel.influencerName}</h3>
                 <span className="text-xs text-slate-500 dark:text-slate-400">Ниша: {activeChannel.niche}</span>

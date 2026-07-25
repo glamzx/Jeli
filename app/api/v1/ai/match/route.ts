@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +11,15 @@ export async function POST(request: Request) {
 
     if (!businessDescription) {
       return NextResponse.json({ error: 'businessDescription is required' }, { status: 400 });
+    }
+
+    if (!isSupabaseConfigured) {
+      return NextResponse.json({
+        analyzed_at: new Date().toISOString(),
+        business_summary: `Анализ для: "${businessDescription.slice(0, 80)}"`,
+        matches: [],
+        message: 'Supabase не настроен. Добавьте переменные окружения, чтобы загрузить базу инфлюенсеров.'
+      });
     }
 
     // Fetch registered creators from Supabase

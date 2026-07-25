@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase, supabaseAdmin } from '@/lib/supabase';
+import { isSupabaseAdminConfigured, supabaseAdmin } from '@/lib/supabase';
 import { hashPassword } from '@/lib/crypto';
 import { validateRegistrationInput, sanitizeString, sanitizeHandle } from '@/lib/validate';
 
@@ -23,6 +23,16 @@ export async function POST(request: Request) {
     const companyName = sanitizeString(body.companyName || '', 100);
     const websiteUrl = body.websiteUrl ? body.websiteUrl.trim().slice(0, 200) : null;
     const budget = sanitizeString(body.budget || '', 50);
+
+    if (!isSupabaseAdminConfigured) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Supabase Admin не настроен. Добавьте NEXT_PUBLIC_SUPABASE_URL и SUPABASE_SERVICE_ROLE_KEY в переменные окружения.'
+        },
+        { status: 503 }
+      );
+    }
 
     // 2. Check if user already exists in public.users table
     const { data: existingUser } = await supabaseAdmin

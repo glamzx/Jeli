@@ -2,12 +2,22 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Sparkles, Send, AlertCircle, ExternalLink, CheckCircle2, XCircle } from "lucide-react";
 
+interface SessionUser {
+  id: string;
+  email: string;
+  fullName?: string;
+  role?: "INFLUENCER" | "BRAND" | "ADMIN";
+}
+
 function DashboardContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<"CAMPAIGNS" | "ANALYTICS" | "AI_ASSISTANT">("CAMPAIGNS");
+  const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
+  const [checkingSession, setCheckingSession] = useState(true);
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalInfluencers: 0,
@@ -29,6 +39,22 @@ function DashboardContent() {
   const [tiktokNotification, setTiktokNotification] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   useEffect(() => {
+    const storedUser = localStorage.getItem("jeli_user");
+
+    if (!storedUser) {
+      router.replace("/login");
+      return;
+    }
+
+    try {
+      setSessionUser(JSON.parse(storedUser));
+    } catch {
+      localStorage.removeItem("jeli_user");
+      router.replace("/login");
+      return;
+    }
+
+    setCheckingSession(false);
     fetchDashboardData();
 
     // Check for TikTok link result from URL params
@@ -50,7 +76,12 @@ function DashboardContent() {
       });
       window.history.replaceState({}, "", "/dashboard");
     }
-  }, [searchParams]);
+  }, [router, searchParams]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("jeli_user");
+    router.replace("/login");
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -104,6 +135,14 @@ function DashboardContent() {
     }
   };
 
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen bg-[#F7F8FC] dark:bg-[#0B0F19] flex items-center justify-center">
+        <div className="text-slate-500 dark:text-slate-400 text-sm">Проверка сессии...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#F7F8FC] dark:bg-[#0B0F19] text-slate-900 dark:text-white flex flex-col transition-colors duration-300">
 
@@ -120,6 +159,12 @@ function DashboardContent() {
           </div>
 
           <div className="flex items-center gap-3">
+            {sessionUser && (
+              <div className="hidden lg:block text-right mr-2">
+                <p className="text-sm font-bold text-slate-900 dark:text-white">{sessionUser.fullName || sessionUser.email}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{sessionUser.role || "Пользователь"}</p>
+              </div>
+            )}
             <button
               onClick={() => setActiveTab("CAMPAIGNS")}
               className={`px-4 py-2 text-sm font-semibold rounded-full transition ${activeTab === 'CAMPAIGNS' ? 'bg-[#0064FF] text-white' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
@@ -137,6 +182,12 @@ function DashboardContent() {
               className={`px-4 py-2 text-sm font-semibold rounded-full transition ${activeTab === 'AI_ASSISTANT' ? 'bg-[#0064FF] text-white' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
             >
               AI Менеджер
+            </button>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 text-sm font-semibold rounded-full text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition"
+            >
+              Выйти
             </button>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +11,10 @@ export async function GET(request: Request) {
 
     if (!userId) {
       return NextResponse.json({ error: 'userId is required' }, { status: 400 });
+    }
+
+    if (!isSupabaseConfigured) {
+      return NextResponse.json({ linked: false, message: 'Supabase не настроен' });
     }
 
     // Find influencer profile

@@ -1,10 +1,19 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    if (!isSupabaseConfigured) {
+      return NextResponse.json({
+        success: false,
+        total: 0,
+        influencers: [],
+        error: 'Supabase is not configured'
+      });
+    }
+
     const { data: profiles, error } = await supabase
       .from('influencer_profiles')
       .select('*, users!user_id(*), social_accounts(*)');
