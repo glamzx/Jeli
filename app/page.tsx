@@ -169,7 +169,7 @@ export default function LandingPage() {
 
           {/* Subtitle (Exact Dovetail Tone) */}
           <p className="text-base sm:text-xl text-slate-400 max-w-2xl mx-auto font-normal leading-relaxed">
-            One platform for every creator signal. Jeli's AI turns TikTok analytics, campaign briefs, and creator matching into answers your whole organization can act on.
+            One platform for every creator signal. Jeli&apos;s AI turns TikTok analytics, campaign briefs, and creator matching into answers your whole organization can act on.
           </p>
 
           {/* Dovetail Dual CTAs (Image 1) */}
@@ -276,7 +276,7 @@ export default function LandingPage() {
               <span className="text-slate-500">✕</span>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed bg-[#05070A] p-4 rounded-xl border border-white/5">
-              "Customers value the ease of TikTok video integrations but report friction when negotiating rates manually. Jeli's 100% Escrow safe system eliminates all rate friction."
+              &quot;Customers value the ease of TikTok video integrations but report friction when negotiating rates manually. Jeli&apos;s 100% Escrow safe system eliminates all rate friction.&quot;
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               <div className="bg-[#05070A] p-3 rounded-xl border border-white/10 flex items-center gap-3">
