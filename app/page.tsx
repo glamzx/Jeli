@@ -568,7 +568,7 @@ export default function LandingPage() {
           <div className="border-t border-white/10 pt-10 flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="space-y-2 max-w-2xl">
               <p className="text-sm sm:text-base italic text-slate-300">
-                &quot;I want to literally chat with nine hours of the TikTok footage that we have—like, 'What do they think about this product? What tone works best?' Jeli lets me test my assumptions instantly.&quot;
+                &quot;I want to literally chat with nine hours of the TikTok footage that we have—like, &lsquo;What do they think about this product? What tone works best?&rsquo; Jeli lets me test my assumptions instantly.&quot;
               </p>
               <p className="text-xs font-bold text-slate-400 font-pixel">
                 MARTIN JERKOVIC <span className="text-slate-600">|</span> LEAD GROWTH DESIGNER, CHOCO
