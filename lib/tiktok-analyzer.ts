@@ -16,7 +16,8 @@ const STOP_WORDS = new Set([
   'these', 'those', 'my', 'your', 'his', 'her', 'its', 'our', 'their', 'it', 'you',
   'we', 'they', 'me', 'him', 'them', 'what', 'which', 'who', 'whom', 'how', 'when',
   'where', 'why', 'not', 'no', 'just', 'so', 'more', 'like', 'get', 'got', 'can', 'will',
-  'video', 'content', 'tiktok', 'make', 'new', 'out', 'all', 'one'
+  'video', 'content', 'tiktok', 'make', 'new', 'out', 'all', 'one',
+  'это', 'для', 'как', 'что', 'при', 'или', 'про', 'так', 'все', 'моя', 'мой', 'наша', 'наш'
 ]);
 
 export interface VideoSample {
@@ -65,7 +66,7 @@ export interface AlignmentResult {
 
 function cleanText(text: string): string[] {
   if (!text) return [];
-  const words = text.toLowerCase().match(/\b[a-zA-Z]{3,}\b/g) || [];
+  const words = text.toLowerCase().match(/[a-zA-ZА-Яа-яЁё0-9]{3,}/g) || [];
   return words.filter(w => !STOP_WORDS.has(w));
 }
 

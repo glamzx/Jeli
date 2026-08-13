@@ -23,7 +23,7 @@ export function getTikTokOAuthConfig() {
     redirectUri = `${redirectUri}/`;
   }
 
-  const scopes = (process.env.TIKTOK_SCOPES || 'user.info.basic')
+  const scopes = (process.env.TIKTOK_SCOPES || 'user.info.basic,video.list')
     .split(',')
     .map(s => s.trim())
     .filter(Boolean);
@@ -43,7 +43,7 @@ export function getTikTokOAuthConfig() {
 }
 
 export function getUserInfoFields(scopes: string[]): string {
-  const fields = new Set<string>(['open_id', 'display_name', 'avatar_url']);
+  const fields = new Set<string>(['open_id', 'display_name', 'avatar_url', 'profile_deep_link']);
 
   if (scopes.includes('user.info.profile')) {
     fields.add('username');

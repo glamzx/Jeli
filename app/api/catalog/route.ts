@@ -22,13 +22,18 @@ export async function GET() {
       return NextResponse.json([]);
     }
 
-    const catalog = profiles.map(inf => {
+    const catalog = profiles.filter(inf => {
+      const socials = Array.isArray(inf.social_accounts) ? inf.social_accounts : [];
+      return socials.some((social: any) => social.platform === 'TIKTOK' && social.access_token);
+    }).map(inf => {
       const user = inf.users || {};
       const socials = Array.isArray(inf.social_accounts) ? inf.social_accounts : [];
       const primarySocial = socials.find((s: any) => s.platform === 'TIKTOK') || socials[0] || {};
       const followers = Number(primarySocial.follower_count || 0);
       const fullName = user.full_name || 'Инфлюенсер';
       const handle = primarySocial.handle || `@${fullName.toLowerCase().replace(/\s+/g, '')}`;
+      const videoAnalysis = inf.ai_persona_config?.tiktokVideoAnalysis || null;
+      const videoCount = Array.isArray(videoAnalysis?.videos) ? videoAnalysis.videos.length : 0;
 
       // Determine if TikTok is verified (has real access token stored)
       const tiktokVerified = socials.some(
@@ -47,7 +52,10 @@ export async function GET() {
         avatar: user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(fullName)}`,
         verified: tiktokVerified,
         bio: inf.bio || 'Зарегистрированный инфлюенсер на Jeli',
-        tiktokLinked: tiktokVerified
+        tiktokLinked: tiktokVerified,
+        contentNiche: videoAnalysis?.primaryNiche || (Array.isArray(inf.niches) ? inf.niches[0] : 'Разное'),
+        videoCount,
+        videos: videoAnalysis?.videos || []
       };
     });
 

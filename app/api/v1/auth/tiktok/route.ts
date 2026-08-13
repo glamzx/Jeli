@@ -9,10 +9,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     const returnTo = searchParams.get('returnTo') || 'dashboard';
-
-    if (!userId) {
-      return NextResponse.json({ error: 'userId is required' }, { status: 400 });
-    }
+    const authMode = searchParams.get('mode') === 'login' ? 'login' : 'link';
 
     const config = getTikTokOAuthConfig();
 
@@ -27,7 +24,8 @@ export async function GET(request: Request) {
     }
 
     const statePayload = JSON.stringify({
-      userId,
+      userId: userId || null,
+      authMode,
       returnTo: returnTo === 'settings' ? 'settings' : 'dashboard',
       nonce: crypto.randomUUID(),
       timestamp: Date.now()

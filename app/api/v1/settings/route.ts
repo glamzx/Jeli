@@ -40,7 +40,9 @@ export async function GET(request: Request) {
         profile = {
           bio: infProfile.bio,
           niches: infProfile.niches,
-          primaryCountry: infProfile.primary_country
+          primaryCountry: infProfile.primary_country,
+          tiktokVideoAnalysis: infProfile.ai_persona_config?.tiktokVideoAnalysis || null,
+          tiktokProfile: infProfile.ai_persona_config?.tiktokProfile || null
         };
         socialAccounts = (infProfile.social_accounts || []).map((s: any) => ({
           id: s.id,

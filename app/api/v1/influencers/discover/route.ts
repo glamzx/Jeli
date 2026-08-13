@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { scrapeTikTokProfile } from '@/lib/tiktok-scraper';
-import { calculateAlignment, TikTokProfileAnalysis } from '@/lib/tiktok-analyzer';
-import { getCachedProfile, saveProfile, listCachedProfiles, normalizeUsername } from '@/lib/scraped-store';
+import { calculateAlignment, TikTokProfileAnalysis, categorizeContent, NICHE_DICTIONARY } from '@/lib/tiktok-analyzer';
+import { analyzeInfluencerMatches, GeminiMatchCandidate } from '@/lib/gemini';
 import { sanitizeString } from '@/lib/validate';
 
 export const dynamic = 'force-dynamic';
@@ -16,211 +16,279 @@ interface DiscoverMatch {
   bio: string;
   verified: boolean;
   tiktokVerified: boolean;
-  source: 'registered' | 'scraped';
+  source: 'registered';
   overallAlignmentScore: number;
   alignmentTier: string;
   engagementRate: number;
   influencerTier: string;
-  profileId?: string;
+  profileId: string;
   avatarUrl?: string;
+  aiAnalysisStatus: 'verified' | 'unavailable';
+  aiRecommendation?: string;
+  aiEvidence?: string[];
+  aiMissingInformation?: string[];
+  aiScores?: {
+    nicheFit: number;
+    audienceFit: number;
+    contentFit: number;
+    commercialFit: number;
+  };
 }
 
-function scoreMatch(
-  profile: TikTokProfileAnalysis,
-  businessDescription: string,
-  targetNiche?: string
-): { score: number; tier: string; alignment: ReturnType<typeof calculateAlignment> } {
+interface EvidenceVideo {
+  title: string;
+  description: string;
+  views: number;
+  likes: number;
+  comments: number;
+  shares: number;
+}
+
+interface OAuthVideo {
+  videoId: string;
+  caption: string;
+  videoUrl: string;
+  plays: number;
+  likes: number;
+  comments: number;
+  shares: number;
+}
+
+function baseScore(profile: TikTokProfileAnalysis, brief: string, targetNiche?: string) {
   const alignment = calculateAlignment(
-    profile.videoSamples.map(v => v.caption),
+    profile.videoSamples.map(video => video.caption),
     profile.bio,
-    businessDescription
+    brief
   );
-
   let score = Math.round(alignment.alignmentScorePct);
-
-  if (targetNiche && targetNiche !== 'Все ниши') {
-    const nicheLower = targetNiche.toLowerCase();
-    const profileNiche = profile.contentIntelligence.primaryNiche.toLowerCase();
-    if (profileNiche.includes(nicheLower) || nicheLower.includes(profileNiche.split(' ')[0])) {
-      score += 15;
-    }
+  if (targetNiche && targetNiche !== 'Все ниши' && profile.contentIntelligence.primaryNiche.toLowerCase().includes(targetNiche.toLowerCase())) {
+    score += 15;
   }
+  return { score: Math.min(99, Math.max(0, score)), alignment };
+}
 
-  if (profile.verified) score += 5;
-  if (profile.metrics.followers >= 100_000) score += 5;
+function tier(score: number) {
+  if (score >= 85) return 'Отличное совпадение';
+  if (score >= 70) return 'Хорошее совпадение';
+  if (score >= 40) return 'Возможное совпадение';
+  return 'Низкое совпадение';
+}
 
-  score = Math.min(Math.max(score, 0), 99);
+function nicheKeywords(label: string) {
+  const normalized = label.toLowerCase();
+  const entry = Object.entries(NICHE_DICTIONARY).find(([name]) => {
+    const namePart = name.toLowerCase().split(' & ')[0];
+    return normalized.includes(namePart) || namePart.includes(normalized);
+  });
+  if (entry) return entry[1];
+  if (normalized.includes('it') || normalized.includes('tech')) return NICHE_DICTIONARY['Tech & Software'];
+  if (normalized.includes('бизнес') || normalized.includes('финанс')) return NICHE_DICTIONARY['Business & Finance'];
+  if (normalized.includes('фитнес') || normalized.includes('спорт')) return NICHE_DICTIONARY['Fitness & Health'];
+  if (normalized.includes('красот') || normalized.includes('beauty')) return NICHE_DICTIONARY['Beauty & Skincare'];
+  return [];
+}
 
-  let tier = 'Высокое совпадение 🔥';
-  if (score < 75) tier = 'Умеренное совпадение ⚡';
-  if (score < 50) tier = 'Базовое совпадение ⚠️';
+function hasRelevantContent(profile: TikTokProfileAnalysis, businessBrief: string, targetNiche: string, score: number) {
+  if (score < 30) return false;
+  const profileText = [
+    profile.contentIntelligence.primaryNiche,
+    profile.contentIntelligence.topKeywords.join(' '),
+    profile.contentIntelligence.topHashtags.join(' '),
+    profile.bio,
+    ...profile.videoSamples.map(video => video.caption)
+  ].join(' ').toLowerCase();
+  const requestedNicheKeywords = nicheKeywords(targetNiche === 'Все ниши' ? businessBrief : targetNiche);
+  if (requestedNicheKeywords.length > 0 && !requestedNicheKeywords.some(keyword => profileText.includes(keyword))) return false;
+  return true;
+}
 
-  return { score, tier, alignment };
+function asProfile(influencer: any, user: any, social: any, scraped: TikTokProfileAnalysis | null): TikTokProfileAnalysis {
+  const stored = influencer.ai_persona_config?.tiktokVideoAnalysis;
+  const storedVideos = Array.isArray(stored?.videos) ? stored.videos : [];
+  const oauthVideos: OAuthVideo[] = storedVideos.map((video: any) => ({
+    videoId: String(video.id || ''),
+    caption: (String(video.title || '') + ' ' + String(video.description || '')).trim(),
+    videoUrl: video.shareUrl || video.embedLink || '',
+    plays: Number(video.viewCount || 0),
+    likes: Number(video.likeCount || 0),
+    comments: Number(video.commentCount || 0),
+    shares: Number(video.shareCount || 0)
+  }));
+  if (scraped) {
+    return {
+      ...scraped,
+      verified: true,
+      bio: scraped.bio || influencer.bio || '',
+      avatarUrl: scraped.avatarUrl || user.avatar_url || '',
+      videoSamples: [...scraped.videoSamples, ...oauthVideos].slice(0, 20)
+    };
+  }
+  const followers = Number(social.follower_count || 0);
+  const videoSamples = oauthVideos;
+  const content = categorizeContent(videoSamples.map(video => video.caption));
+  return {
+    username: social.handle || '@creator',
+    nickname: user.full_name || 'Инфлюенсер',
+    bio: influencer.bio || '',
+    verified: true,
+    avatarUrl: user.avatar_url || '',
+    metrics: {
+      followers,
+      following: 0,
+      totalLikes: videoSamples.reduce((sum, video) => sum + video.likes, 0),
+      totalVideos: videoSamples.length,
+      avgLikesPerVideo: videoSamples.length ? Math.round(videoSamples.reduce((sum, video) => sum + video.likes, 0) / videoSamples.length) : 0,
+      influencerTier: followers >= 1000000 ? 'Mega' : followers >= 100000 ? 'Macro' : followers >= 10000 ? 'Micro' : 'Nano',
+      engagementRate: Number(social.engagement_rate || 0)
+    },
+    contentIntelligence: {
+      primaryNiche: stored?.primaryNiche || content.primaryNiche || influencer.niches?.join(', ') || 'Разное',
+      topKeywords: stored?.topKeywords || content.topKeywords,
+      topHashtags: stored?.topHashtags || content.topHashtags,
+      contentSummary: 'Анализ построен на данных TikTok OAuth и публичных видео.'
+    },
+    videoSamples,
+    scrapedAt: new Date().toISOString(),
+    source: 'cache'
+  };
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const {
-      businessDescription,
-      targetNiche,
-      budget,
-      tiktokUsernames = [],
-      includeRegistered = true,
-      userId
-    } = body;
+    const businessDescription = sanitizeString(body.businessDescription || '', 1000);
+    if (!businessDescription) return NextResponse.json({ error: 'businessDescription is required' }, { status: 400 });
+    if (!isSupabaseConfigured) return NextResponse.json({ success: false, error: 'Supabase is not configured' }, { status: 503 });
 
-    if (!businessDescription) {
-      return NextResponse.json({ error: 'businessDescription is required' }, { status: 400 });
-    }
+    const targetNiche = sanitizeString(body.targetNiche || 'Все ниши', 100);
+    const budget = sanitizeString(body.budget || 'Не указан', 100);
+    const audience = sanitizeString(body.audience || 'Не указана', 500);
+    const campaignGoal = sanitizeString(body.campaignGoal || 'Не указана', 300);
+    const deliverables = sanitizeString(body.deliverables || 'Не указаны', 300);
+    const tone = sanitizeString(body.tone || 'Не указан', 200);
+    const location = sanitizeString(body.location || 'Не указана', 200);
+    const requested = new Set((Array.isArray(body.tiktokUsernames) ? body.tiktokUsernames : [])
+      .map((value: string) => value.replace(/^@/, '').trim().toLowerCase()).filter(Boolean));
 
-    const cleanDesc = sanitizeString(businessDescription, 1000);
+    const { data: profiles, error } = await supabase
+      .from('influencer_profiles')
+      .select('*, users!user_id(*), social_accounts(*)');
+    if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+
     const matches: DiscoverMatch[] = [];
-    const scrapedUsernames = new Set<string>();
+    const candidates: GeminiMatchCandidate[] = [];
 
-    // 1. Scrape requested TikTok usernames
-    const usernamesToScrape = (tiktokUsernames as string[])
-      .map(u => normalizeUsername(u))
-      .filter(Boolean)
-      .slice(0, 10);
+    for (const influencer of profiles || []) {
+      const user = influencer.users || {};
+      const socials = Array.isArray(influencer.social_accounts) ? influencer.social_accounts : [];
+      const social = socials.find((item: any) => item.platform === 'TIKTOK' && item.access_token);
+      if (!social) continue;
 
-    for (const username of usernamesToScrape) {
-      scrapedUsernames.add(username);
-      let profile = await scrapeTikTokProfile(username);
-      if (!profile) profile = await getCachedProfile(username);
-      if (profile) {
-        await saveProfile(username, profile, userId);
-        const { score, tier } = scoreMatch(profile, cleanDesc, targetNiche);
-        matches.push({
-          username: profile.username,
-          nickname: profile.nickname,
-          followers: profile.metrics.followers,
-          niche: profile.contentIntelligence.primaryNiche,
-          bio: profile.bio,
-          verified: profile.verified,
-          tiktokVerified: profile.verified,
-          source: 'scraped',
-          overallAlignmentScore: score,
-          alignmentTier: tier,
-          engagementRate: profile.metrics.engagementRate,
-          influencerTier: profile.metrics.influencerTier,
-          avatarUrl: profile.avatarUrl
-        });
+      const handle = String(social.handle || '').replace(/^@/, '').toLowerCase();
+      if (requested.size > 0 && !requested.has(handle)) continue;
+
+      let scraped: TikTokProfileAnalysis | null = null;
+      try {
+        scraped = handle ? await scrapeTikTokProfile(handle) : null;
+      } catch (scrapeError) {
+        console.warn('Linked TikTok scrape warning:', scrapeError);
       }
-    }
 
-    // 2. Include registered influencers from Supabase
-    if (includeRegistered && isSupabaseConfigured) {
-      const { data: profiles } = await supabase
-        .from('influencer_profiles')
-        .select('*, users!user_id(*), social_accounts(*)');
+      const profile = asProfile(influencer, user, social, scraped);
+      const brief = [businessDescription, targetNiche, audience, campaignGoal, deliverables, tone, location].join(' ');
+      const { score } = baseScore(profile, brief, targetNiche);
+      if (!hasRelevantContent(profile, brief, targetNiche, score)) continue;
+      const videos: EvidenceVideo[] = profile.videoSamples.slice(0, 20).map(video => ({
+        title: video.caption.slice(0, 150),
+        description: video.caption.slice(0, 500),
+        views: video.plays,
+        likes: video.likes,
+        comments: video.comments,
+        shares: video.shares
+      }));
 
-      for (const inf of profiles || []) {
-        const user = inf.users || {};
-        const socials = Array.isArray(inf.social_accounts) ? inf.social_accounts : [];
-        const primary = socials.find((s: any) => s.platform === 'TIKTOK') || socials[0] || {};
-        const handle = (primary.handle || '').replace(/^@/, '').toLowerCase();
-
-        if (handle && scrapedUsernames.has(handle)) continue;
-
-        const tiktokVerified = socials.some(
-          (s: any) => s.platform === 'TIKTOK' && s.access_token && s.follower_count > 0
-        );
-
-        const registeredProfile: TikTokProfileAnalysis = {
-          username: primary.handle || `@${handle}`,
-          nickname: user.full_name || 'Инфлюенсер',
-          bio: inf.bio || '',
-          verified: tiktokVerified,
-          avatarUrl: user.avatar_url || '',
-          metrics: {
-            followers: Number(primary.follower_count || 0),
-            following: 0,
-            totalLikes: 0,
-            totalVideos: 0,
-            avgLikesPerVideo: 0,
-            influencerTier: Number(primary.follower_count || 0) >= 1_000_000 ? 'Mega'
-              : Number(primary.follower_count || 0) >= 100_000 ? 'Macro' : 'Micro',
-            engagementRate: Number(primary.engagement_rate || 0)
-          },
-          contentIntelligence: {
-            primaryNiche: Array.isArray(inf.niches) && inf.niches.length > 0 ? inf.niches.join(', ') : 'Разное',
-            topKeywords: [],
-            topHashtags: [],
-            contentSummary: inf.bio || ''
-          },
-          videoSamples: [],
-          scrapedAt: new Date().toISOString(),
-          source: 'cache'
-        };
-
-        const { score, tier } = scoreMatch(registeredProfile, cleanDesc, targetNiche);
-        const finalScore = Math.min(score + (tiktokVerified ? 10 : 0), 99);
-
-        matches.push({
-          username: registeredProfile.username,
-          nickname: registeredProfile.nickname,
-          followers: registeredProfile.metrics.followers,
-          niche: registeredProfile.contentIntelligence.primaryNiche,
-          bio: registeredProfile.bio,
-          verified: tiktokVerified,
-          tiktokVerified,
-          source: 'registered',
-          overallAlignmentScore: finalScore,
-          alignmentTier: tier,
-          engagementRate: registeredProfile.metrics.engagementRate,
-          influencerTier: registeredProfile.metrics.influencerTier,
-          profileId: inf.id,
-          avatarUrl: registeredProfile.avatarUrl
-        });
-      }
-    }
-
-    // 3. Include previously scraped profiles from cache
-    const cached = await listCachedProfiles(20);
-    for (const profile of cached) {
-      const key = normalizeUsername(profile.username);
-      if (scrapedUsernames.has(key)) continue;
-      if (matches.some(m => normalizeUsername(m.username) === key)) continue;
-
-      const { score, tier } = scoreMatch(profile, cleanDesc, targetNiche);
+      candidates.push({
+        username: profile.username,
+        nickname: profile.nickname,
+        bio: profile.bio,
+        niche: profile.contentIntelligence.primaryNiche,
+        followers: profile.metrics.followers,
+        country: influencer.primary_country || '',
+        videos
+      });
       matches.push({
         username: profile.username,
         nickname: profile.nickname,
         followers: profile.metrics.followers,
         niche: profile.contentIntelligence.primaryNiche,
         bio: profile.bio,
-        verified: profile.verified,
-        tiktokVerified: profile.verified,
-        source: 'scraped',
+        verified: true,
+        tiktokVerified: true,
+        source: 'registered',
         overallAlignmentScore: score,
-        alignmentTier: tier,
+        alignmentTier: tier(score),
         engagementRate: profile.metrics.engagementRate,
         influencerTier: profile.metrics.influencerTier,
-        avatarUrl: profile.avatarUrl
+        profileId: influencer.id,
+        avatarUrl: profile.avatarUrl,
+        aiAnalysisStatus: 'unavailable'
       });
     }
 
-    matches.sort((a, b) => b.overallAlignmentScore - a.overallAlignmentScore);
-
-    let filtered = matches;
-    if (targetNiche && targetNiche !== 'Все ниши') {
-      filtered = matches.filter(
-        m => m.niche.toLowerCase().includes(targetNiche.toLowerCase()) || m.overallAlignmentScore >= 40
-      );
+    if (matches.length === 0) {
+      return NextResponse.json({
+        success: true,
+        analyzedAt: new Date().toISOString(),
+        totalFound: 0,
+        matches: [],
+        message: 'Нет инфлюенсеров с подтверждённым TikTok OAuth аккаунтом.'
+      });
     }
+
+    const ai = await analyzeInfluencerMatches({
+      businessDescription,
+      targetNiche,
+      budget,
+      audience,
+      campaignGoal,
+      deliverables,
+      tone,
+      location,
+      candidates
+    });
+    const aiByUsername = new Map(ai.results.map(result => [result.username.replace(/^@/, '').toLowerCase(), result]));
+
+    const finalMatches = matches.map(match => {
+      const result = aiByUsername.get(match.username.replace(/^@/, '').toLowerCase());
+      if (!result) return { ...match, aiAnalysisStatus: 'unavailable' as const };
+      return {
+        ...match,
+        overallAlignmentScore: result.score,
+        alignmentTier: tier(result.score),
+        aiAnalysisStatus: 'verified' as const,
+        aiRecommendation: result.recommendation,
+        aiEvidence: result.evidence,
+        aiMissingInformation: result.missingInformation,
+        aiScores: {
+          nicheFit: result.nicheFit,
+          audienceFit: result.audienceFit,
+          contentFit: result.contentFit,
+          commercialFit: result.commercialFit
+        }
+      };
+    }).sort((a, b) => b.overallAlignmentScore - a.overallAlignmentScore);
 
     return NextResponse.json({
       success: true,
       analyzedAt: new Date().toISOString(),
-      businessSummary: cleanDesc.slice(0, 120),
-      budget: budget || null,
-      targetNiche: targetNiche || 'Все ниши',
-      totalFound: filtered.length,
-      matches: filtered.slice(0, 20)
+      businessSummary: businessDescription.slice(0, 120),
+      totalFound: finalMatches.length,
+      aiAvailable: ai.available,
+      aiError: ai.available ? null : ai.error,
+      matches: finalMatches.slice(0, 20)
     });
   } catch (error: any) {
     console.error('Discover error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Influencer analysis failed' }, { status: 500 });
   }
 }

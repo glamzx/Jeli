@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { isSupabaseAdminConfigured, supabaseAdmin } from '@/lib/supabase';
 import { hashPassword } from '@/lib/crypto';
 import { validateRegistrationInput, sanitizeString, sanitizeHandle } from '@/lib/validate';
+import { setSessionCookie } from '@/lib/auth-session';
 
 export const dynamic = 'force-dynamic';
 
@@ -83,7 +84,7 @@ export async function POST(request: Request) {
       full_name: fullName,
       password_hash: passwordHash,
       role: role,
-      status: 'ACTIVE',
+      status: role === 'INFLUENCER' ? 'PENDING_ONBOARDING' : 'ACTIVE',
       updated_at: new Date().toISOString()
     };
     if (authUserId) {
@@ -157,7 +158,7 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: 'Пользователь успешно зарегистрирован в Supabase Auth и PostgreSQL',
       user: {
@@ -165,10 +166,18 @@ export async function POST(request: Request) {
         email: cleanEmail,
         fullName: fullName,
         role: role,
-        status: 'ACTIVE',
+        status: role === 'INFLUENCER' ? 'PENDING_ONBOARDING' : 'ACTIVE',
         inSupabaseAuth: !!authUserId
       }
     });
+    setSessionCookie(response, {
+      id: userId,
+      email: cleanEmail,
+      fullName,
+      role,
+      status: role === 'INFLUENCER' ? 'PENDING_ONBOARDING' : 'ACTIVE'
+    });
+    return response;
 
   } catch (error: any) {
     console.error('Registration error:', error);

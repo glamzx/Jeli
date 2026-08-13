@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim();
 
 export async function POST(request: Request) {
   try {
@@ -13,10 +13,10 @@ export async function POST(request: Request) {
     if (GEMINI_API_KEY && GEMINI_API_KEY !== "your_gemini_api_key_here") {
       try {
         const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+          'https://generativelanguage.googleapis.com/v1beta/models/' + (process.env.GEMINI_MODEL || 'gemini-2.0-flash') + ':generateContent',
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", "x-goog-api-key": GEMINI_API_KEY },
             body: JSON.stringify({
               contents: [
                 {
@@ -44,10 +44,10 @@ export async function POST(request: Request) {
       }
     }
 
-    // Smart contextual fallback response if API is unreachable
     return NextResponse.json({
-      reply: `Я проанализировал ваш запрос: "${message}". Как AI Менеджер Jeli, я рекомендую подобрать проверенных блогеров через вкладку "Сделки & Кампании". Прогнозируемый ROI от интеграции в Казахстане: 3.2x – 4.5x.`
-    });
+      reply: 'Gemini AI сейчас недоступен, поэтому я не буду выдумывать рекомендации. Повторите запрос позже.',
+      aiAvailable: false
+    }, { status: 503 });
 
   } catch (error: any) {
     return NextResponse.json({ error: "AI Chat error", details: error.message }, { status: 500 });

@@ -23,7 +23,10 @@ export async function GET() {
       return NextResponse.json({ success: false, total: 0, influencers: [], error: error.message });
     }
 
-    const influencers = (profiles || []).map(inf => {
+    const influencers = (profiles || []).filter(inf => {
+      const socials = Array.isArray(inf.social_accounts) ? inf.social_accounts : [];
+      return socials.some((social: any) => social.platform === 'TIKTOK' && social.access_token);
+    }).map(inf => {
       const user = inf.users || {};
       const socials = Array.isArray(inf.social_accounts) ? inf.social_accounts : [];
       const tiktokVerified = socials.some(

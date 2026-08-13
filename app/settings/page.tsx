@@ -31,6 +31,20 @@ interface SocialAccount {
   linked: boolean;
 }
 
+interface TikTokVideo {
+  id: string;
+  title: string;
+  description: string;
+  duration: number;
+  coverImageUrl: string;
+  embedLink: string;
+  shareUrl: string;
+  viewCount: number;
+  likeCount: number;
+  commentCount: number;
+  shareCount: number;
+}
+
 export default function SettingsPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>("profile");
@@ -175,7 +189,6 @@ export default function SettingsPage() {
 
       if (data.success) {
         setMessage({ type: "success", text: "Профиль успешно обновлён" });
-        // Update localStorage
         const stored = JSON.parse(localStorage.getItem("jeli_user") || "{}");
         stored.fullName = fullName;
         stored.email = email;
@@ -270,14 +283,18 @@ export default function SettingsPage() {
   };
 
   const tiktokAccount = socialAccounts.find(s => s.platform === "TIKTOK");
+  const tiktokVideoAnalysis = profile?.tiktokVideoAnalysis as {
+    videos?: TikTokVideo[];
+    analyzedAt?: string;
+    primaryNiche?: string;
+    topKeywords?: string[];
+  } | null;
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F7F8FC] dark:bg-[#0B0F19] flex items-center justify-center">
-        <div className="text-slate-500 dark:text-slate-400 text-sm flex items-center gap-2">
-          <div className="w-5 h-5 border-2 border-[#0064FF]/30 border-t-[#0064FF] rounded-full animate-spin" />
-          Загрузка настроек...
-        </div>
+      <div className="min-h-screen bg-[#07090E] flex items-center justify-center text-slate-400 text-xs">
+        <div className="w-5 h-5 border-2 border-[#0064FF]/30 border-t-[#0064FF] rounded-full animate-spin mr-2" />
+        Загрузка настроек...
       </div>
     );
   }
@@ -290,46 +307,50 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F7F8FC] dark:bg-[#0B0F19] text-slate-900 dark:text-white transition-colors duration-300">
+    <div className="min-h-screen bg-[#07090E] text-slate-100 font-sans selection:bg-[#0064FF] selection:text-white relative overflow-x-hidden">
+      {/* Background Dark Grid Overlay */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-30 pointer-events-none z-0" />
+      <div className="absolute top-0 right-1/4 w-[600px] h-[400px] bg-[#0064FF]/10 blur-[160px] pointer-events-none rounded-full" />
+
       {/* Header */}
-      <header className="border-b border-slate-200 dark:border-slate-800 bg-[#F7F8FC]/80 dark:bg-[#0B0F19]/80 backdrop-blur-md px-6 py-4">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#07090E]/80 backdrop-blur-xl px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="text-slate-500 hover:text-slate-900 dark:hover:text-white transition">
+            <Link href="/dashboard" className="text-slate-400 hover:text-white transition">
               <ArrowLeft className="w-5 h-5" />
             </Link>
-            <Link href="/" className="text-3xl font-extrabold italic font-['Outfit'] text-slate-900 dark:text-white">
-              Jeli.
+            <Link href="/" className="text-2xl font-extrabold italic tracking-tight font-outfit text-white">
+              Jeli<span className="text-[#0064FF]">.</span>
             </Link>
-            <span className="text-xs px-3 py-1 bg-blue-500/10 border border-blue-500/20 text-[#0064FF] rounded-full font-semibold">
-              Настройки
+            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#0064FF]/20 text-[#0064FF] border border-[#0064FF]/30 font-pixel">
+              SETTINGS
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <Link href="/dashboard" className="text-sm text-slate-500 hover:text-slate-900 dark:hover:text-white transition font-medium">
+            <Link href="/dashboard" className="text-xs font-semibold text-slate-300 hover:text-white transition">
               Дашборд
             </Link>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-600 font-medium transition"
+              className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 font-bold transition"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-3.5 h-3.5" />
               Выйти
             </button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto p-6">
+      <main className="max-w-5xl mx-auto p-6 relative z-10">
         {/* Notification banner */}
         {message && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`mb-6 p-4 rounded-2xl flex items-center gap-2 text-sm font-medium ${
+            className={`mb-6 p-4 rounded-2xl flex items-center gap-2 text-xs font-semibold ${
               message.type === "success"
-                ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
-                : "bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400"
+                ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
+                : "bg-red-500/10 border border-red-500/20 text-red-400"
             }`}
           >
             {message.type === "success" ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
@@ -341,34 +362,34 @@ export default function SettingsPage() {
         <div className="flex flex-col md:flex-row gap-6">
           {/* Sidebar */}
           <div className="md:w-64 flex-shrink-0">
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 space-y-1">
+            <div className="glass-card-dark border border-white/10 rounded-3xl p-4 space-y-1">
               {/* Avatar & Name */}
-              <div className="text-center pb-4 border-b border-slate-200 dark:border-slate-800 mb-3">
-                <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-[#0064FF] to-blue-700 flex items-center justify-center text-white text-2xl font-bold mb-2">
+              <div className="text-center pb-4 border-b border-white/10 mb-3">
+                <div className="w-16 h-16 mx-auto rounded-full bg-[#0064FF]/20 border-2 border-[#0064FF] flex items-center justify-center text-white text-2xl font-bold mb-2">
                   {(userData?.fullName || "U").charAt(0).toUpperCase()}
                 </div>
-                <h3 className="font-bold text-sm">{userData?.fullName}</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">{userData?.email}</p>
-                <span className={`inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full font-semibold ${
+                <h3 className="font-bold text-sm text-white">{userData?.fullName}</h3>
+                <p className="text-xs text-slate-400">{userData?.email}</p>
+                <span className={`inline-block mt-2 text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
                   userData?.role === "INFLUENCER"
-                    ? "bg-blue-500/10 text-[#0064FF]"
-                    : "bg-purple-500/10 text-purple-500"
+                    ? "bg-[#0064FF]/20 text-[#0064FF] border border-[#0064FF]/30"
+                    : "bg-purple-500/20 text-purple-400 border border-purple-500/30"
                 }`}>
                   {userData?.role === "INFLUENCER" ? "Инфлюенсер" : "Бренд"}
                 </span>
               </div>
 
-              {/* Tabs */}
+              {/* Navigation Tabs */}
               {tabs.map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => { setActiveTab(tab.id); setMessage(null); }}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition ${
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition ${
                     activeTab === tab.id
-                      ? "bg-[#0064FF] text-white"
+                      ? "bg-[#0064FF] text-white glow-blue"
                       : tab.id === "danger"
-                        ? "text-red-500 hover:bg-red-500/10"
-                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                        ? "text-red-400 hover:bg-red-500/10"
+                        : "text-slate-400 hover:bg-white/5 hover:text-white"
                   }`}
                 >
                   <tab.icon className="w-4 h-4" />
@@ -378,73 +399,67 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Main content */}
+          {/* Main Content Pane */}
           <div className="flex-1">
             <motion.div
               key={activeTab}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2 }}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8"
+              className="glass-card-dark border border-white/10 rounded-3xl p-6 md:p-8 space-y-6"
             >
               {/* PROFILE TAB */}
               {activeTab === "profile" && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-bold mb-1">Профиль</h2>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Редактируйте информацию вашего аккаунта</p>
+                    <h2 className="text-xl font-extrabold font-outfit text-white mb-1">Профиль пользователя</h2>
+                    <p className="text-xs text-slate-400">Редактируйте персональные данные вашего аккаунта</p>
                   </div>
 
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Полное имя</label>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Полное имя</label>
                       <input
                         type="text"
                         value={fullName}
                         onChange={e => setFullName(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#0064FF]"
+                        className="w-full bg-[#07090E] border border-white/10 rounded-2xl px-4 py-3 text-xs text-white focus:outline-none focus:border-[#0064FF]"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Email</label>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Email</label>
                       <input
                         type="email"
                         value={email}
                         onChange={e => setEmail(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#0064FF]"
+                        className="w-full bg-[#07090E] border border-white/10 rounded-2xl px-4 py-3 text-xs text-white focus:outline-none focus:border-[#0064FF]"
                       />
                     </div>
 
-                    {/* Role-specific fields */}
                     {userData?.role === "INFLUENCER" && (
                       <>
                         <div>
-                          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Био / Описание</label>
+                          <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Био / Описание</label>
                           <textarea
                             value={bio}
                             onChange={e => setBio(e.target.value)}
                             rows={3}
                             maxLength={500}
-                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#0064FF] resize-none"
+                            className="w-full bg-[#07090E] border border-white/10 rounded-2xl p-4 text-xs text-white focus:outline-none focus:border-[#0064FF] resize-none"
                           />
-                          <p className="text-xs text-slate-400 mt-1">{bio.length}/500 символов</p>
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Категория контента</label>
+                          <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Категория контента</label>
                           <select
                             value={niche}
                             onChange={e => setNiche(e.target.value)}
-                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#0064FF]"
+                            className="w-full bg-[#07090E] border border-white/10 rounded-2xl px-4 py-3 text-xs text-white focus:outline-none focus:border-[#0064FF]"
                           >
-                            <option value="IT">IT & Технологии</option>
-                            <option value="Фитнес">Фитнес & ЗОЖ</option>
-                            <option value="Бизнес">Бизнес & Финансы</option>
-                            <option value="Красота">Красота & Бьюти</option>
-                            <option value="Развлечения">Развлечения & Юмор</option>
-                            <option value="Еда">Еда & Кулинария</option>
-                            <option value="Путешествия">Путешествия</option>
-                            <option value="Образование">Образование</option>
+                            <option value="IT" className="bg-[#07090E] text-white">IT & Технологии</option>
+                            <option value="Фитнес" className="bg-[#07090E] text-white">Фитнес & ЗОЖ</option>
+                            <option value="Бизнес" className="bg-[#07090E] text-white">Бизнес & Финансы</option>
+                            <option value="Красота" className="bg-[#07090E] text-white">Красота & Бьюти</option>
                           </select>
                         </div>
                       </>
@@ -453,28 +468,14 @@ export default function SettingsPage() {
                     {userData?.role === "BRAND" && (
                       <>
                         <div>
-                          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Название компании</label>
+                          <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Название компании</label>
                           <input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)}
-                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#0064FF]" />
+                            className="w-full bg-[#07090E] border border-white/10 rounded-2xl px-4 py-3 text-xs text-white focus:outline-none focus:border-[#0064FF]" />
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Сайт</label>
+                          <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Сайт</label>
                           <input type="url" value={websiteUrl} onChange={e => setWebsiteUrl(e.target.value)}
-                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#0064FF]" />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Индустрия</label>
-                          <input type="text" value={industry} onChange={e => setIndustry(e.target.value)}
-                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#0064FF]" />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Месячный бюджет</label>
-                          <select value={budget} onChange={e => setBudget(e.target.value)}
-                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#0064FF]">
-                            <option value="до 250,000 ₸">до 250,000 ₸</option>
-                            <option value="250,000 ₸ – 1,000,000 ₸">250,000 ₸ – 1,000,000 ₸</option>
-                            <option value="более 1,000,000 ₸">более 1,000,000 ₸</option>
-                          </select>
+                            className="w-full bg-[#07090E] border border-white/10 rounded-2xl px-4 py-3 text-xs text-white focus:outline-none focus:border-[#0064FF]" />
                         </div>
                       </>
                     )}
@@ -483,7 +484,7 @@ export default function SettingsPage() {
                   <button
                     onClick={handleSaveProfile}
                     disabled={saving}
-                    className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#0064FF] hover:bg-blue-600 text-white font-bold text-sm transition disabled:opacity-50"
+                    className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#0064FF] hover:bg-blue-600 text-white font-bold text-xs transition glow-blue disabled:opacity-50"
                   >
                     {saving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save className="w-4 h-4" />}
                     {saving ? "Сохранение..." : "Сохранить изменения"}
@@ -495,59 +496,46 @@ export default function SettingsPage() {
               {activeTab === "security" && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-bold mb-1">Безопасность</h2>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Измените пароль вашего аккаунта</p>
+                    <h2 className="text-xl font-extrabold font-outfit text-white mb-1">Безопасность</h2>
+                    <p className="text-xs text-slate-400">Измените пароль вашего аккаунта</p>
                   </div>
 
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Текущий пароль</label>
-                      <div className="relative">
-                        <input
-                          type={showCurrentPw ? "text" : "password"}
-                          value={currentPassword}
-                          onChange={e => setCurrentPassword(e.target.value)}
-                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 pr-12 text-sm focus:outline-none focus:border-[#0064FF]"
-                        />
-                        <button type="button" onClick={() => setShowCurrentPw(!showCurrentPw)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
-                          {showCurrentPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                      </div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Текущий пароль</label>
+                      <input
+                        type="password"
+                        value={currentPassword}
+                        onChange={e => setCurrentPassword(e.target.value)}
+                        className="w-full bg-[#07090E] border border-white/10 rounded-2xl px-4 py-3 text-xs text-white focus:outline-none focus:border-[#0064FF]"
+                      />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Новый пароль</label>
-                      <div className="relative">
-                        <input
-                          type={showNewPw ? "text" : "password"}
-                          value={newPassword}
-                          onChange={e => setNewPassword(e.target.value)}
-                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 pr-12 text-sm focus:outline-none focus:border-[#0064FF]"
-                        />
-                        <button type="button" onClick={() => setShowNewPw(!showNewPw)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
-                          {showNewPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                      </div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Новый пароль</label>
+                      <input
+                        type="password"
+                        value={newPassword}
+                        onChange={e => setNewPassword(e.target.value)}
+                        className="w-full bg-[#07090E] border border-white/10 rounded-2xl px-4 py-3 text-xs text-white focus:outline-none focus:border-[#0064FF]"
+                      />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Подтвердите новый пароль</label>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Подтвердите пароль</label>
                       <input
                         type="password"
                         value={confirmPassword}
                         onChange={e => setConfirmPassword(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#0064FF]"
+                        className="w-full bg-[#07090E] border border-white/10 rounded-2xl px-4 py-3 text-xs text-white focus:outline-none focus:border-[#0064FF]"
                       />
-                      {confirmPassword && newPassword !== confirmPassword && (
-                        <p className="text-xs text-red-500 mt-1">Пароли не совпадают</p>
-                      )}
                     </div>
                   </div>
 
                   <button
                     onClick={handleChangePassword}
                     disabled={saving || !currentPassword || !newPassword || newPassword !== confirmPassword}
-                    className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#0064FF] hover:bg-blue-600 text-white font-bold text-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#0064FF] hover:bg-blue-600 text-white font-bold text-xs transition glow-blue disabled:opacity-50"
                   >
                     <Shield className="w-4 h-4" />
                     {saving ? "Обновление..." : "Обновить пароль"}
@@ -559,102 +547,63 @@ export default function SettingsPage() {
               {activeTab === "connections" && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-bold mb-1">Подключённые аккаунты</h2>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                      {userData?.role === "INFLUENCER"
-                        ? "Привяжите ваши социальные сети для верификации и получения статистики"
-                        : "Интеграции с внешними сервисами"}
-                    </p>
+                    <h2 className="text-xl font-extrabold font-outfit text-white mb-1">Подключённые аккаунты</h2>
+                    <p className="text-xs text-slate-400">Верификация социальных сетей и получение статистики</p>
                   </div>
 
-                  {/* TikTok Card */}
-                  <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
-                    <div className="flex items-center justify-between mb-4">
+                  {/* TikTok OAuth Card */}
+                  <div className="bg-[#07090E] border border-white/10 rounded-3xl p-6 space-y-4">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-2xl bg-black flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center">
                           <svg viewBox="0 0 24 24" className="w-6 h-6 text-white fill-current">
                             <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.88-2.88A2.89 2.89 0 0 1 9.5 12.4c.28 0 .55.04.81.1v-3.5a6.37 6.37 0 0 0-.81-.05A6.34 6.34 0 0 0 3.16 15.3a6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V9.37a8.16 8.16 0 0 0 4.75 1.52V7.43a4.85 4.85 0 0 1-1-.74z"/>
                           </svg>
                         </div>
                         <div>
-                          <h3 className="font-bold text-base">TikTok</h3>
-                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                          <h3 className="font-bold text-base text-white">TikTok OAuth</h3>
+                          <p className="text-xs text-slate-400">
                             {tiktokAccount?.linked ? `Привязан: ${tiktokAccount.handle}` : "Аккаунт не привязан"}
                           </p>
                         </div>
                       </div>
 
                       {tiktokAccount?.linked ? (
-                        <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-500 bg-emerald-500/10 px-3 py-1.5 rounded-full">
+                        <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           Верифицирован
                         </span>
                       ) : (
-                        <span className="flex items-center gap-1.5 text-xs font-semibold text-amber-500 bg-amber-500/10 px-3 py-1.5 rounded-full">
+                        <span className="flex items-center gap-1.5 text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-full">
                           <AlertTriangle className="w-3.5 h-3.5" />
                           Не привязан
                         </span>
                       )}
                     </div>
 
-                    {tiktokAccount?.linked ? (
-                      <div className="grid grid-cols-2 gap-4 mb-4">
-                        <div className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800">
-                          <p className="text-xs text-slate-500 dark:text-slate-400">Подписчики</p>
-                          <p className="text-xl font-extrabold text-slate-900 dark:text-white">{tiktokAccount.followerCount.toLocaleString()}</p>
+                    {tiktokAccount?.linked && (
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
+                          <p className="text-[10px] text-slate-400">Подписчики</p>
+                          <p className="text-xl font-extrabold text-white">{tiktokAccount.followerCount.toLocaleString()}</p>
                         </div>
-                        <div className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800">
-                          <p className="text-xs text-slate-500 dark:text-slate-400">Вовлечённость</p>
+                        <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
+                          <p className="text-[10px] text-slate-400">Вовлечённость</p>
                           <p className="text-xl font-extrabold text-[#0064FF]">{tiktokAccount.engagementRate}%</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-3 mb-4">
-                        <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                          <ShieldCheck className="w-4 h-4 text-[#0064FF] flex-shrink-0" />
-                          Верификация вашего аккаунта
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                          <ShieldCheck className="w-4 h-4 text-[#0064FF] flex-shrink-0" />
-                          Автоматическая загрузка статистики
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                          <ShieldCheck className="w-4 h-4 text-[#0064FF] flex-shrink-0" />
-                          Значок ✅ в каталоге инфлюенсеров
                         </div>
                       </div>
                     )}
 
                     <button
                       onClick={handleTikTokLink}
-                      className={`w-full py-3 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2 ${
-                        tiktokAccount?.linked
-                          ? "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700"
-                          : "bg-black hover:bg-gray-800 text-white"
-                      }`}
+                      className="w-full py-3 rounded-2xl bg-[#0064FF] hover:bg-blue-600 text-white font-bold text-xs transition glow-blue flex items-center justify-center gap-2"
                     >
                       <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
                         <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.88-2.88A2.89 2.89 0 0 1 9.5 12.4c.28 0 .55.04.81.1v-3.5a6.37 6.37 0 0 0-.81-.05A6.34 6.34 0 0 0 3.16 15.3a6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V9.37a8.16 8.16 0 0 0 4.75 1.52V7.43a4.85 4.85 0 0 1-1-.74z"/>
                       </svg>
-                      {tiktokAccount?.linked ? "Переподключить TikTok" : "Привязать TikTok аккаунт"}
+                      {tiktokAccount?.linked ? "Переподключить TikTok OAuth" : "Привязать TikTok OAuth"}
                       <ExternalLink className="w-3.5 h-3.5" />
                     </button>
-
-                    <div className="mt-4 p-4 rounded-xl bg-blue-500/5 border border-blue-500/15 text-xs text-slate-600 dark:text-slate-400 space-y-1.5">
-                      <p className="font-semibold text-[#0064FF]">
-                        {tiktokConfig?.useSandbox ? "Настройка TikTok (Sandbox)" : "Настройка TikTok OAuth"}
-                        {tiktokConfig?.fullyConfigured && (
-                          <span className="ml-2 text-emerald-500">● API настроен</span>
-                        )}
-                      </p>
-                      {tiktokConfig?.redirectUri && (
-                        <p>Redirect URI: <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded">{tiktokConfig.redirectUri}</code></p>
-                      )}
-                      <p>1. Откройте <a href={`https://developers.tiktok.com/app/${tiktokConfig?.appId || "7666345825798391809"}`} target="_blank" rel="noopener noreferrer" className="text-[#0064FF] underline">TikTok Developer Portal</a> → <strong>Sandbox</strong></p>
-                      <p>2. Login Kit → Web → добавьте Redirect URI (точно как выше, со слэшем в конце)</p>
-                      <p>3. Sandbox → Target users → добавьте ваш TikTok аккаунт</p>
-                      <p>4. Войдите тем же TikTok аккаунтом, который добавили в Target users</p>
-                    </div>
                   </div>
                 </div>
               )}
@@ -663,49 +612,41 @@ export default function SettingsPage() {
               {activeTab === "danger" && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-bold text-red-500 mb-1">Зона удаления</h2>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Удаление аккаунта необратимо. Все данные будут стёрты.</p>
+                    <h2 className="text-xl font-extrabold font-outfit text-red-500 mb-1">Зона удаления</h2>
+                    <p className="text-xs text-slate-400">Удаление аккаунта необратимо.</p>
                   </div>
 
-                  <div className="bg-red-500/5 border border-red-500/20 rounded-2xl p-6">
-                    <div className="flex items-start gap-3 mb-4">
-                      <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <h3 className="font-bold text-sm text-red-600 dark:text-red-400">Удалить аккаунт навсегда</h3>
-                        <p className="text-xs text-slate-500 mt-1">
-                          Все ваши данные, профиль, подключения и история будут безвозвратно удалены.
-                        </p>
-                      </div>
-                    </div>
-
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-3xl p-6 space-y-4">
+                    <p className="text-xs text-red-300">
+                      Все ваши данные, профиль и активные интеграции будут безвозвратно удалены.
+                    </p>
                     {!showDeleteConfirm ? (
                       <button
                         onClick={() => setShowDeleteConfirm(true)}
-                        className="px-5 py-2.5 rounded-xl border border-red-500/30 text-red-500 hover:bg-red-500/10 font-bold text-sm transition"
+                        className="px-5 py-2.5 rounded-xl border border-red-500/40 text-red-400 hover:bg-red-500/20 text-xs font-bold transition"
                       >
-                        Удалить мой аккаунт
+                        Удалить аккаунт
                       </button>
                     ) : (
                       <div className="space-y-3">
-                        <p className="text-sm text-red-600 dark:text-red-400 font-medium">Введите пароль для подтверждения:</p>
                         <input
                           type="password"
                           value={deletePassword}
                           onChange={e => setDeletePassword(e.target.value)}
-                          placeholder="Ваш пароль"
-                          className="w-full bg-white dark:bg-slate-900 border border-red-500/30 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-red-500"
+                          placeholder="Введите пароль для подтверждения"
+                          className="w-full bg-[#07090E] border border-red-500/30 rounded-xl px-4 py-3 text-xs text-white focus:outline-none"
                         />
-                        <div className="flex gap-3">
+                        <div className="flex gap-2">
                           <button
                             onClick={handleDeleteAccount}
                             disabled={!deletePassword || saving}
-                            className="px-5 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-sm transition disabled:opacity-50"
+                            className="px-5 py-2 rounded-xl bg-red-500 text-white font-bold text-xs"
                           >
-                            {saving ? "Удаление..." : "Подтвердить удаление"}
+                            Подтвердить
                           </button>
                           <button
-                            onClick={() => { setShowDeleteConfirm(false); setDeletePassword(""); }}
-                            className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800"
+                            onClick={() => setShowDeleteConfirm(false)}
+                            className="px-5 py-2 rounded-xl bg-white/10 text-slate-400 text-xs font-bold"
                           >
                             Отмена
                           </button>

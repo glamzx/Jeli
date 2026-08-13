@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { isSupabaseAdminConfigured, supabaseAdmin } from '@/lib/supabase';
 import { verifyPassword } from '@/lib/crypto';
 import { isValidEmail } from '@/lib/validate';
+import { setSessionCookie } from '@/lib/auth-session';
 
 export const dynamic = 'force-dynamic';
 
@@ -104,7 +105,7 @@ export async function POST(request: Request) {
       profileData = brandProf;
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: 'Успешная авторизация',
       user: {
@@ -117,6 +118,15 @@ export async function POST(request: Request) {
         profile: profileData
       }
     });
+    setSessionCookie(response, {
+      id: user.id,
+      email: user.email,
+      fullName: user.full_name,
+      role: user.role,
+      status: user.status,
+      avatarUrl: user.avatar_url
+    });
+    return response;
 
   } catch (error: any) {
     console.error('Login route error:', error);
