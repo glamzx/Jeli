@@ -215,7 +215,7 @@ function DashboardContent() {
 
   if (checkingSession) {
     return (
-      <div className="min-h-screen bg-[#07090E] flex items-center justify-center text-slate-400 text-xs">
+      <div className="min-h-screen bg-[#05070A] flex items-center justify-center text-slate-400 text-xs">
         <Loader2 className="w-5 h-5 animate-spin text-[#0064FF] mr-2" />
         Проверка авторизации...
       </div>
@@ -223,9 +223,9 @@ function DashboardContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#07090E] text-slate-100 flex flex-col font-sans selection:bg-[#0064FF] selection:text-white relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#05070A] text-slate-100 flex flex-col font-sans selection:bg-[#0064FF] selection:text-white relative overflow-x-hidden">
       {/* Background Dark Grid Overlay */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-30 pointer-events-none z-0" />
+      <div className="absolute inset-0 bg-grid-pattern opacity-40 pointer-events-none z-0" />
       <div className="absolute top-0 right-1/4 w-[600px] h-[400px] bg-[#0064FF]/10 blur-[160px] pointer-events-none rounded-full" />
 
       {/* Top Header */}

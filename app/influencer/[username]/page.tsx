@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import {
   ArrowLeft, CheckCircle2, ExternalLink, Heart, MessageCircle,
   Play, Share2, Users, Video, Hash, Sparkles, AlertCircle,
-  TrendingUp, BarChart3, Target
+  TrendingUp, BarChart3, Target, ShieldCheck, DollarSign
 } from "lucide-react";
 
 interface ProfileData {
@@ -100,23 +100,21 @@ function InfluencerDetailContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F7F8FC] dark:bg-[#0B0F19] flex items-center justify-center">
-        <div className="text-slate-500 text-sm flex items-center gap-2">
-          <div className="w-5 h-5 border-2 border-[#0064FF]/30 border-t-[#0064FF] rounded-full animate-spin" />
-          Анализ профиля @{username}...
-        </div>
+      <div className="min-h-screen bg-[#05070A] text-slate-100 flex items-center justify-center text-xs">
+        <div className="w-5 h-5 border-2 border-[#0064FF]/30 border-t-[#0064FF] rounded-full animate-spin mr-2" />
+        Анализ профиля @{username}...
       </div>
     );
   }
 
   if (error || !profile) {
     return (
-      <div className="min-h-screen bg-[#F7F8FC] dark:bg-[#0B0F19] flex items-center justify-center p-6">
-        <div className="text-center max-w-md">
-          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h1 className="text-xl font-bold mb-2">Профиль не найден</h1>
-          <p className="text-sm text-slate-500 mb-6">{error}</p>
-          <Link href="/dashboard" className="px-6 py-2.5 rounded-full bg-[#0064FF] text-white text-sm font-bold">
+      <div className="min-h-screen bg-[#05070A] text-slate-100 flex items-center justify-center p-6 font-sans">
+        <div className="text-center max-w-md space-y-4">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto" />
+          <h1 className="text-xl font-bold font-outfit text-white">Профиль не найден</h1>
+          <p className="text-xs text-slate-400">{error}</p>
+          <Link href="/dashboard" className="px-6 py-2.5 rounded-full bg-[#0064FF] text-white text-xs font-bold glow-blue inline-block">
             Вернуться в дашборд
           </Link>
         </div>
@@ -124,31 +122,32 @@ function InfluencerDetailContent() {
     );
   }
 
-  const tierColors: Record<string, string> = {
-    Mega: "text-purple-500 bg-purple-500/10",
-    Macro: "text-blue-500 bg-blue-500/10",
-    Micro: "text-emerald-500 bg-emerald-500/10",
-    Nano: "text-amber-500 bg-amber-500/10"
-  };
-
   return (
-    <div className="min-h-screen bg-[#F7F8FC] dark:bg-[#0B0F19] text-slate-900 dark:text-white">
-      <header className="border-b border-slate-200 dark:border-slate-800 bg-[#F7F8FC]/80 dark:bg-[#0B0F19]/80 backdrop-blur-md px-6 py-4">
+    <div className="min-h-screen bg-[#05070A] text-slate-100 font-sans selection:bg-[#0064FF] selection:text-white relative overflow-x-hidden">
+      {/* Background Dark Grid Overlay */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-35 pointer-events-none z-0" />
+      <div className="absolute top-0 right-1/4 w-[600px] h-[400px] bg-[#0064FF]/10 blur-[150px] pointer-events-none rounded-full" />
+
+      {/* Header */}
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#05070A]/85 backdrop-blur-xl px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="text-slate-500 hover:text-slate-900 dark:hover:text-white">
+            <Link href="/catalog" className="text-slate-400 hover:text-white transition">
               <ArrowLeft className="w-5 h-5" />
             </Link>
-            <Link href="/" className="text-3xl font-extrabold italic font-['Outfit']">Jeli.</Link>
-            <span className="text-xs px-3 py-1 bg-blue-500/10 border border-blue-500/20 text-[#0064FF] rounded-full font-semibold">
-              Анализ инфлюенсера
+            <Link href="/" className="text-2xl font-extrabold italic tracking-tight font-outfit text-white">
+              Jeli<span className="text-[#0064FF]">.</span>
+            </Link>
+            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#0064FF]/20 text-[#0064FF] border border-[#0064FF]/30 font-pixel">
+              CREATOR ANALYTICS
             </span>
           </div>
+
           <div className="flex items-center gap-3">
             <button
               onClick={handleRefresh}
               disabled={refreshing}
-              className="px-4 py-2 text-sm font-semibold rounded-full border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition disabled:opacity-50"
+              className="px-4 py-2 text-xs font-bold rounded-full bg-white/5 border border-white/10 text-white hover:bg-white/10 transition disabled:opacity-50"
             >
               {refreshing ? "Обновление..." : "Обновить данные"}
             </button>
@@ -156,7 +155,7 @@ function InfluencerDetailContent() {
               href={`https://www.tiktok.com/${profile.username}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-full bg-black text-white hover:bg-gray-800 transition"
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-full bg-white text-black hover:bg-slate-200 transition"
             >
               TikTok <ExternalLink className="w-3.5 h-3.5" />
             </a>
@@ -164,182 +163,141 @@ function InfluencerDetailContent() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto p-6 space-y-6">
-        {/* Profile Header */}
+      <main className="max-w-6xl mx-auto p-6 relative z-10 space-y-6">
+        {/* Profile Card Header */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8"
+          className="glass-card-dark border border-white/10 rounded-3xl p-8 space-y-4"
         >
           <div className="flex flex-col md:flex-row items-start gap-6">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#0064FF] to-blue-700 flex items-center justify-center text-white text-3xl font-bold flex-shrink-0 overflow-hidden">
-              {profile.avatarUrl ? (
-                <img src={profile.avatarUrl} alt={profile.nickname} className="w-full h-full object-cover" />
-              ) : (
-                profile.nickname.charAt(0).toUpperCase()
-              )}
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-3 flex-wrap mb-2">
-                <h1 className="text-2xl font-extrabold">{profile.nickname}</h1>
+            <img
+              src={profile.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.nickname}`}
+              alt={profile.nickname}
+              className="w-24 h-24 rounded-3xl object-cover border-2 border-[#0064FF]"
+            />
+            <div className="flex-1 space-y-2">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="text-3xl font-extrabold font-outfit text-white">{profile.nickname}</h1>
                 {profile.verified && (
-                  <span className="flex items-center gap-1 text-xs font-semibold text-emerald-500 bg-emerald-500/10 px-2.5 py-1 rounded-full">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Verified
+                  <span className="flex items-center gap-1 text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Verified ✅
                   </span>
                 )}
-                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${tierColors[profile.metrics.influencerTier] || tierColors.Micro}`}>
-                  {profile.metrics.influencerTier} Influencer
+                <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-[#0064FF]/20 text-[#0064FF] border border-[#0064FF]/30">
+                  {profile.metrics.influencerTier} Creator
                 </span>
               </div>
-              <p className="text-[#0064FF] font-semibold mb-2">{profile.username}</p>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">{profile.bio || "Нет описания"}</p>
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <Sparkles className="w-3.5 h-3.5" />
-                Источник: {profile.source === "live" ? "Live scrape" : profile.source === "cache" ? "Кэш" : "Каталог"}
-                · Обновлено: {new Date(profile.scrapedAt).toLocaleString("ru-RU")}
+              <p className="text-xs text-[#0064FF] font-bold">{profile.username}</p>
+              <p className="text-xs text-slate-300 leading-relaxed">{profile.bio || "Зарегистрированный креатор Jeli."}</p>
+              <div className="flex items-center gap-2 text-[11px] text-slate-400 pt-2 border-t border-white/5">
+                <Sparkles className="w-3.5 h-3.5 text-[#0064FF]" />
+                Источник: {profile.source === "live" ? "Live Scrape" : "Verified API"} · Обновлено: {new Date(profile.scrapedAt).toLocaleDateString("ru-RU")}
               </div>
             </div>
           </div>
         </motion.div>
 
-        {/* Metrics Grid */}
+        {/* 4 Performance Metric Columns (Identical to Image 3 Spec) */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: "Подписчики", value: profile.metrics.followers.toLocaleString(), icon: Users, color: "text-[#0064FF]" },
-            { label: "Лайки", value: profile.metrics.totalLikes.toLocaleString(), icon: Heart, color: "text-red-500" },
-            { label: "Видео", value: profile.metrics.totalVideos.toLocaleString(), icon: Video, color: "text-purple-500" },
-            { label: "Вовлечённость", value: `${profile.metrics.engagementRate}%`, icon: TrendingUp, color: "text-emerald-500" }
+            { label: "Подписчики", value: profile.metrics.followers.toLocaleString(), color: "text-white" },
+            { label: "Лайки", value: profile.metrics.totalLikes.toLocaleString(), color: "text-white" },
+            { label: "Всего Роликов", value: profile.metrics.totalVideos.toLocaleString(), color: "text-white" },
+            { label: "Engagement Rate", value: `${profile.metrics.engagementRate}%`, color: "text-[#0064FF]" }
           ].map((stat, i) => (
-            <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
-              <div className="flex items-center gap-2 mb-2">
-                <stat.icon className={`w-4 h-4 ${stat.color}`} />
-                <span className="text-xs text-slate-500 font-semibold">{stat.label}</span>
-              </div>
-              <p className={`text-2xl font-extrabold ${stat.color}`}>{stat.value}</p>
+            <div key={i} className="glass-card-dark p-5 rounded-3xl border border-white/10 space-y-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{stat.label}</span>
+              <p className={`text-2xl font-extrabold font-outfit ${stat.color} flex items-center gap-1`}>
+                <span className="font-pixel text-lg text-[#0064FF]">↑</span>
+                {stat.value}
+              </p>
             </div>
           ))}
         </div>
 
-        {/* Content Intelligence + Alignment */}
+        {/* Content Intelligence & Alignment */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6">
-            <div className="flex items-center gap-2 mb-4">
+          <div className="glass-card-dark border border-white/10 rounded-3xl p-6 space-y-4">
+            <div className="flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-[#0064FF]" />
-              <h2 className="font-bold text-lg">Контент-анализ Jeli</h2>
+              <h2 className="font-bold text-base text-white">Контент-аналитика Jeli AI</h2>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div>
-                <p className="text-xs font-semibold uppercase text-slate-500 mb-1">Основная ниша</p>
-                <p className="font-bold text-[#0064FF]">{profile.contentIntelligence.primaryNiche}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Основная ниша</p>
+                <p className="text-sm font-extrabold text-[#0064FF]">{profile.contentIntelligence.primaryNiche}</p>
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase text-slate-500 mb-2">Ключевые темы</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Ключевые темы</p>
                 <div className="flex flex-wrap gap-2">
-                  {profile.contentIntelligence.topKeywords.length > 0 ? (
-                    profile.contentIntelligence.topKeywords.map((kw, i) => (
-                      <span key={i} className="px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-xs font-medium">{kw}</span>
-                    ))
-                  ) : (
-                    <span className="text-sm text-slate-400">Нет данных</span>
-                  )}
+                  {profile.contentIntelligence.topKeywords.map((kw, i) => (
+                    <span key={i} className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-xs font-semibold text-slate-300">
+                      {kw}
+                    </span>
+                  ))}
                 </div>
               </div>
-              <div>
-                <p className="text-xs font-semibold uppercase text-slate-500 mb-2">Топ хэштеги</p>
-                <div className="flex flex-wrap gap-2">
-                  {profile.contentIntelligence.topHashtags.length > 0 ? (
-                    profile.contentIntelligence.topHashtags.map((tag, i) => (
-                      <span key={i} className="flex items-center gap-1 px-3 py-1 bg-blue-500/10 text-[#0064FF] rounded-full text-xs font-medium">
-                        <Hash className="w-3 h-3" />{tag.replace("#", "")}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-sm text-slate-400">Нет хэштегов</span>
-                  )}
-                </div>
-              </div>
-              <p className="text-sm text-slate-600 dark:text-slate-400 italic">{profile.contentIntelligence.contentSummary}</p>
             </div>
           </div>
 
-          {alignment ? (
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6">
-              <div className="flex items-center gap-2 mb-4">
+          {alignment && (
+            <div className="glass-card-dark border border-white/10 rounded-3xl p-6 space-y-4">
+              <div className="flex items-center gap-2">
                 <Target className="w-5 h-5 text-[#0064FF]" />
-                <h2 className="font-bold text-lg">Соответствие бизнесу</h2>
+                <h2 className="font-bold text-base text-white">Оценка соответствия бизнесу</h2>
               </div>
-              <div className="text-center mb-6">
-                <p className="text-5xl font-extrabold text-[#0064FF]">{alignment.alignmentScorePct}%</p>
-                <p className="text-sm font-semibold mt-2">{alignment.alignmentLevel}</p>
-              </div>
-              <div className="space-y-2">
-                <p className="text-xs text-slate-500">
-                  Совпало ключевых слов: {alignment.matchedKeywordCount} из {alignment.totalBusinessKeywords}
+              <div className="text-center py-2">
+                <p className="text-4xl font-extrabold font-outfit text-white flex items-center justify-center gap-2">
+                  <span className="font-pixel text-2xl text-[#0064FF]">↑</span>
+                  {alignment.alignmentScorePct}%
                 </p>
-                {alignment.matchedKeywords.map((mk, i) => (
-                  <div key={i} className="flex justify-between text-sm px-3 py-2 bg-slate-50 dark:bg-slate-950 rounded-xl">
-                    <span className="font-medium">{mk.keyword}</span>
-                    <span className="text-slate-500">{mk.count} упоминаний</span>
-                  </div>
-                ))}
+                <p className="text-xs font-bold text-emerald-400 mt-1">{alignment.alignmentLevel}</p>
               </div>
-            </div>
-          ) : (
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 flex flex-col items-center justify-center text-center">
-              <Target className="w-10 h-10 text-slate-300 mb-3" />
-              <p className="text-sm text-slate-500">Укажите описание бизнеса при поиске, чтобы увидеть оценку соответствия</p>
             </div>
           )}
         </div>
 
-        {/* Video Samples */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <Video className="w-5 h-5 text-[#0064FF]" />
-            <h2 className="font-bold text-lg">Анализ видео ({profile.videoSamples.length})</h2>
-          </div>
+        {/* Video Samples List */}
+        <div className="glass-card-dark border border-white/10 rounded-3xl p-6 space-y-4">
+          <h2 className="font-bold text-base text-white flex items-center gap-2">
+            <Video className="w-4 h-4 text-[#0064FF]" />
+            Примеры TikTok видео ({profile.videoSamples.length})
+          </h2>
 
-          {profile.videoSamples.length > 0 ? (
-            <div className="space-y-4">
-              {profile.videoSamples.slice(0, 10).map((video, i) => (
-                <div key={video.videoId || i} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                  <div className="flex items-start justify-between gap-4 mb-3">
-                    <p className="text-sm flex-1">{video.caption || "Без описания"}</p>
-                    {video.videoUrl && (
-                      <a href={video.videoUrl} target="_blank" rel="noopener noreferrer" className="text-[#0064FF] flex-shrink-0">
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
-                    )}
-                  </div>
-                  <div className="flex gap-4 text-xs text-slate-500">
-                    <span className="flex items-center gap-1"><Play className="w-3.5 h-3.5" /> {video.plays.toLocaleString()}</span>
-                    <span className="flex items-center gap-1"><Heart className="w-3.5 h-3.5" /> {video.likes.toLocaleString()}</span>
-                    <span className="flex items-center gap-1"><MessageCircle className="w-3.5 h-3.5" /> {video.comments.toLocaleString()}</span>
-                    <span className="flex items-center gap-1"><Share2 className="w-3.5 h-3.5" /> {video.shares.toLocaleString()}</span>
+          <div className="space-y-3">
+            {profile.videoSamples.slice(0, 5).map((video, i) => (
+              <div key={i} className="p-4 rounded-2xl bg-[#07090E] border border-white/5 flex items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <p className="text-xs text-white font-medium line-clamp-1">{video.caption || "TikTok интеграция"}</p>
+                  <div className="flex gap-4 text-[11px] text-slate-400">
+                    <span>👁️ {video.plays.toLocaleString()}</span>
+                    <span>❤️ {video.likes.toLocaleString()}</span>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-slate-500 text-sm">
-              Видео недоступны — TikTok не вернул список роликов. Метрики профиля загружены успешно.
-            </div>
-          )}
+                {video.videoUrl && (
+                  <a href={video.videoUrl} target="_blank" rel="noopener noreferrer" className="p-2 rounded-xl bg-white/5 text-[#0064FF] hover:bg-white/10">
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* CTA */}
-        <div className="flex gap-4 justify-center pb-8">
+        {/* Bottom CTA */}
+        <div className="flex gap-4 justify-center pt-4 pb-8">
           <Link
-            href="/dashboard"
-            className="px-8 py-3 rounded-full bg-[#0064FF] hover:bg-blue-600 text-white font-bold text-sm transition"
+            href="/register?role=BRAND"
+            className="px-8 py-3.5 rounded-full bg-[#0064FF] hover:bg-blue-600 text-white font-bold text-xs transition glow-blue"
           >
-            Вернуться в дашборд
+            Предложить рекламный контракт
           </Link>
           <Link
-            href={`/chat?influencer=${encodeURIComponent(profile.username)}`}
-            className="px-8 py-3 rounded-full border border-slate-200 dark:border-slate-700 font-bold text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            href="/catalog"
+            className="px-8 py-3.5 rounded-full bg-white/5 border border-white/10 text-white font-bold text-xs hover:bg-white/10 transition"
           >
-            Связаться с инфлюенсером
+            Вернуться в каталог
           </Link>
         </div>
       </main>
@@ -350,8 +308,8 @@ function InfluencerDetailContent() {
 export default function InfluencerDetailPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#F7F8FC] dark:bg-[#0B0F19] flex items-center justify-center">
-        <div className="text-slate-500 text-sm">Загрузка...</div>
+      <div className="min-h-screen bg-[#05070A] flex items-center justify-center text-slate-400 text-xs">
+        Загрузка...
       </div>
     }>
       <InfluencerDetailContent />

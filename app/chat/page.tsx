@@ -91,12 +91,12 @@ export default function RealtimeChatPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#07090E] text-slate-100 flex flex-col font-sans selection:bg-[#0064FF] selection:text-white relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#05070A] text-slate-100 flex flex-col font-sans selection:bg-[#0064FF] selection:text-white relative overflow-x-hidden">
       {/* Background Dark Grid Overlay */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-30 pointer-events-none z-0" />
+      <div className="absolute inset-0 bg-grid-pattern opacity-40 pointer-events-none z-0" />
 
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#07090E]/80 backdrop-blur-xl px-6 py-3.5 flex items-center justify-between">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#05070A]/85 backdrop-blur-xl px-6 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/dashboard" className="text-slate-400 hover:text-white transition">
             <ArrowLeft className="w-5 h-5" />

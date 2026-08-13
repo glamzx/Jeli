@@ -1,23 +1,30 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Файлы cookie | Jeli',
-  description: 'Информация об использовании файлов cookie на Jeli.'
+  title: 'Политика использования файлов Cookie | Jeli',
+  description: 'Информация об использовании файлов Cookie на платформе Jeli.'
 };
 
 export default function CookiesPage() {
   return (
-    <main className="min-h-screen bg-[#F7F8FC] px-6 py-10 text-slate-900">
-      <article className="mx-auto max-w-3xl rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-10">
-        <Link href="/" className="text-sm font-semibold text-[#0064FF] hover:underline">Назад на главную</Link>
-        <h1 className="mt-6 text-3xl font-extrabold">Файлы cookie Jeli</h1>
-        <p className="mt-2 text-sm text-slate-500">Последнее обновление: 25 июля 2026 г.</p>
-        <div className="mt-8 space-y-6 text-sm leading-7 text-slate-700">
-          <p>Jeli использует необходимые cookie для сохранения входа, защиты сессии и корректной работы TikTok OAuth.</p>
-          <p>Cookie-сессия хранится в защищенном HttpOnly формате и не используется для рекламного отслеживания. Настройки темы и согласия на cookie могут храниться в браузере.</p>
-          <p>Удаление cookie приведет к выходу из аккаунта на этом устройстве. Сведения о персональных данных доступны в <Link href="/privacy" className="text-[#0064FF] underline">политике конфиденциальности</Link>.</p>
+    <main className="min-h-screen bg-[#05070A] text-slate-100 font-sans px-6 py-10 relative overflow-x-hidden">
+      <div className="absolute inset-0 bg-grid-pattern opacity-40 pointer-events-none z-0" />
+      <div className="relative z-10 mx-auto max-w-3xl glass-card-dark border border-white/10 rounded-3xl p-6 sm:p-10 space-y-6">
+        <Link href="/" className="text-xs font-bold text-[#0064FF] hover:underline font-pixel">
+          ← НАЗАД НА ГЛАВНУЮ
+        </Link>
+        <div>
+          <h1 className="text-3xl font-extrabold font-outfit text-white">Политика Cookie Jeli</h1>
+          <p className="mt-1 text-xs text-slate-400">Последнее обновление: 2026 г.</p>
         </div>
-      </article>
+
+        <div className="space-y-6 text-xs leading-relaxed text-slate-300">
+          <section>
+            <h2 className="text-sm font-bold text-white mb-1">1. Что такое файлы Cookie</h2>
+            <p>Мы используем файлы Cookie для сохранения вашей сессии авторизации, языковых предпочтений и работы аналитики Gemini AI.</p>
+          </section>
+        </div>
+      </div>
     </main>
   );
 }

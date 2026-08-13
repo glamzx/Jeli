@@ -29,13 +29,13 @@ export default function ResourcesPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#07090E] text-slate-100 font-sans selection:bg-[#0064FF] selection:text-white relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#05070A] text-slate-100 font-sans selection:bg-[#0064FF] selection:text-white relative overflow-x-hidden">
       {/* Background Dark Grid Overlay */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-35 pointer-events-none z-0" />
+      <div className="absolute inset-0 bg-grid-pattern opacity-40 pointer-events-none z-0" />
       <div className="absolute top-0 right-1/4 w-[600px] h-[400px] bg-[#0064FF]/10 blur-[150px] pointer-events-none rounded-full" />
 
       {/* Header */}
-      <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#07090E]/80 backdrop-blur-xl px-6 py-4">
+      <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#05070A]/85 backdrop-blur-xl px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/" className="text-slate-400 hover:text-white transition">

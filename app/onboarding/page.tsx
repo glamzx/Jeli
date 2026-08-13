@@ -100,7 +100,7 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#07090E] text-slate-100 flex flex-col justify-center items-center px-4 py-12 relative overflow-hidden font-sans selection:bg-[#0064FF] selection:text-white">
+    <div className="min-h-screen bg-[#05070A] text-slate-100 flex flex-col justify-center items-center px-4 py-12 relative overflow-hidden font-sans selection:bg-[#0064FF] selection:text-white">
       {/* Background Dark Grid Overlay */}
       <div className="absolute inset-0 bg-grid-pattern opacity-40 pointer-events-none z-0" />
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#0064FF]/10 rounded-full blur-[140px] pointer-events-none" />

@@ -2,46 +2,33 @@ import Link from 'next/link';
 
 export const metadata = {
   title: 'Условия использования | Jeli',
-  description: 'Условия использования платформы Jeli.'
+  description: 'Пользовательское соглашение и условия использования платформы Jeli.'
 };
 
 export default function TermsPage() {
   return (
-    <main className="min-h-screen bg-[#F7F8FC] px-6 py-10 text-slate-900">
-      <article className="mx-auto max-w-3xl rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-10">
-        <Link href="/" className="text-sm font-semibold text-[#0064FF] hover:underline">
-          Назад на главную
+    <main className="min-h-screen bg-[#05070A] text-slate-100 font-sans px-6 py-10 relative overflow-x-hidden">
+      <div className="absolute inset-0 bg-grid-pattern opacity-40 pointer-events-none z-0" />
+      <div className="relative z-10 mx-auto max-w-3xl glass-card-dark border border-white/10 rounded-3xl p-6 sm:p-10 space-y-6">
+        <Link href="/" className="text-xs font-bold text-[#0064FF] hover:underline font-pixel">
+          ← НАЗАД НА ГЛАВНУЮ
         </Link>
-        <h1 className="mt-6 text-3xl font-extrabold">Условия использования Jeli</h1>
-        <p className="mt-2 text-sm text-slate-500">Последнее обновление: 25 июля 2026 г.</p>
+        <div>
+          <h1 className="text-3xl font-extrabold font-outfit text-white">Условия использования Jeli</h1>
+          <p className="mt-1 text-xs text-slate-400">Последнее обновление: 2026 г.</p>
+        </div>
 
-        <div className="mt-8 space-y-7 text-sm leading-7 text-slate-700">
+        <div className="space-y-6 text-xs leading-relaxed text-slate-300">
           <section>
-            <h2 className="text-lg font-bold text-slate-900">1. О платформе</h2>
-            <p>Jeli - платформа для поиска и взаимодействия бизнеса и инфлюенсеров. Она помогает создавать профили, находить подходящих партнеров и управлять сотрудничеством.</p>
+            <h2 className="text-sm font-bold text-white mb-1">1. Предмет соглашения</h2>
+            <p>Платформа Jeli предоставляет сервис автоматизированного подбора инфлюенсеров и безопасного проведения маркетинговых сделок через гарантийный механизм Escrow.</p>
           </section>
           <section>
-            <h2 className="text-lg font-bold text-slate-900">2. Учетная запись</h2>
-            <p>Пользователь обязан предоставлять точные сведения при регистрации и сохранять доступ к своей учетной записи в безопасности. Запрещается выдавать себя за другое лицо или использовать платформу в незаконных целях.</p>
-          </section>
-          <section>
-            <h2 className="text-lg font-bold text-slate-900">3. Подключение TikTok</h2>
-            <p>При добровольном подключении TikTok Jeli получает только разрешенные пользователем данные в соответствии с выбранными разрешениями TikTok. Подключение можно отозвать в настройках Jeli или через настройки TikTok.</p>
-          </section>
-          <section>
-            <h2 className="text-lg font-bold text-slate-900">4. Контент и правила использования</h2>
-            <p>Пользователь несет ответственность за информацию, которую размещает на Jeli, и должен соблюдать применимое законодательство, права третьих лиц и правила подключенных платформ.</p>
-          </section>
-          <section>
-            <h2 className="text-lg font-bold text-slate-900">5. Изменения и прекращение доступа</h2>
-            <p>Jeli может обновлять платформу и эти условия. При существенных изменениях новая редакция будет опубликована на этой странице. Доступ может быть ограничен при нарушении условий или требований закона.</p>
-          </section>
-          <section>
-            <h2 className="text-lg font-bold text-slate-900">6. Контакты</h2>
-            <p>По вопросам об условиях использования напишите команде Jeli через страницу поддержки или официальные контакты, указанные в приложении.</p>
+            <h2 className="text-sm font-bold text-white mb-1">2. Права и обязанности сторон</h2>
+            <p>Бренды обязуются предоставлять достоверные технические задания и вовремя депонировать средства. Инфлюенсеры обязуются выполнять интеграции в соответствии с ТЗ.</p>
           </section>
         </div>
-      </article>
+      </div>
     </main>
   );
 }
