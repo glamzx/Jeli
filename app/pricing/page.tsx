@@ -51,110 +51,151 @@ export default function PricingPage() {
         </div>
       </nav>
 
-      {/* Main Pricing Hero */}
-      <main className="max-w-7xl mx-auto px-6 py-16 relative z-10 space-y-16">
+      {/* Main Pricing Hero (Matching Screenshot 3 Spec) */}
+      <main className="max-w-6xl mx-auto px-6 py-16 relative z-10 space-y-16">
+        
         <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0064FF]/10 border border-[#0064FF]/20 text-xs font-bold text-[#0064FF] font-pixel">
-            <Sparkles className="w-3.5 h-3.5" />
-            TRANSPARENT PLANS
-          </div>
-          <h1 className="text-4xl sm:text-6xl font-extrabold font-outfit text-white tracking-tight">
-            {lang === "ru" ? "Прозрачные тарифы для роста бизнеса" : "Transparent Pricing for Business Growth"}
+          <span className="text-[10px] font-bold tracking-widest text-slate-400 font-pixel uppercase">
+            PRICING
+          </span>
+
+          <h1 className="text-5xl sm:text-7xl font-extrabold font-outfit text-white tracking-tight">
+            Start free.<br />
+            <span className="text-[#0064FF]">Upgrade to scale</span>
           </h1>
-          <p className="text-slate-400 text-sm sm:text-base">
-            {lang === "ru"
-              ? "Выберите подходящий план для работы с инфлюенсерами. От стартапов до крупного бизнеса."
-              : "Choose the right plan to power your influencer marketing campaigns."}
-          </p>
 
-          {/* Billing Cycle Switcher */}
-          <div className="inline-flex items-center gap-3 p-1.5 rounded-full bg-white/5 border border-white/10 mt-6">
-            <button
-              onClick={() => setBillingCycle("monthly")}
-              className={`px-5 py-2 rounded-full text-xs font-bold transition ${billingCycle === "monthly" ? "bg-[#0064FF] text-white glow-blue" : "text-slate-400"}`}
-            >
-              {lang === "ru" ? "Ежемесячно" : "Monthly"}
-            </button>
-            <button
-              onClick={() => setBillingCycle("annual")}
-              className={`px-5 py-2 rounded-full text-xs font-bold transition flex items-center gap-1.5 ${billingCycle === "annual" ? "bg-[#0064FF] text-white glow-blue" : "text-slate-400"}`}
-            >
-              <span>{lang === "ru" ? "Ежегодно" : "Annual"}</span>
-              <span className="text-[9px] font-extrabold bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-pixel">
-                -20%
-              </span>
-            </button>
+          {/* Billing Cycle Toggle */}
+          <div className="pt-4 flex items-center justify-center">
+            <div className="bg-white/5 border border-white/10 p-1 rounded-full flex items-center gap-1 text-xs font-bold">
+              <button
+                onClick={() => setBillingCycle("monthly")}
+                className={`px-5 py-2 rounded-full transition ${billingCycle === "monthly" ? "bg-[#0064FF] text-white glow-blue" : "text-slate-400 hover:text-white"}`}
+              >
+                {lang === "ru" ? "Ежемесячно" : "Monthly"}
+              </button>
+              <button
+                onClick={() => setBillingCycle("annual")}
+                className={`px-5 py-2 rounded-full transition flex items-center gap-1.5 ${billingCycle === "annual" ? "bg-[#0064FF] text-white glow-blue" : "text-slate-400 hover:text-white"}`}
+              >
+                <span>{lang === "ru" ? "Ежегодно" : "Annual"}</span>
+                <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                  -20%
+                </span>
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Pricing Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch max-w-6xl mx-auto">
-          {/* Free Plan */}
-          <div className="glass-card-dark p-8 rounded-3xl space-y-6 border border-white/10 flex flex-col justify-between">
+        {/* 2 Large Side-by-Side Pricing Cards (Screenshot 3 Spec) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+          
+          {/* Card 1: Free Plan */}
+          <div className="bg-[#0A0D14] border border-white/10 rounded-3xl p-8 space-y-6 flex flex-col justify-between">
             <div className="space-y-4">
-              <h3 className="font-bold text-xl text-white">Free Starter</h3>
-              <div className="text-4xl font-extrabold font-outfit text-white">0 ₸</div>
-              <p className="text-xs text-slate-400">
-                {lang === "ru" ? "Для разовых запусков и знакомства с платформой." : "Best for trying out creator discovery."}
-              </p>
-              <ul className="space-y-3 pt-6 border-t border-white/5 text-xs text-slate-300">
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#0064FF]" /> 3 AI-поиска в день</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#0064FF]" /> Публичный каталог креаторов</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#0064FF]" /> 1 активная Escrow-сделка</li>
-                <li className="flex items-center gap-2 text-slate-500"><Check className="w-4 h-4 text-slate-600" /> Без глубинного AI-скоринга</li>
-              </ul>
-            </div>
-            <Link href="/register?role=BRAND" className="w-full py-3.5 rounded-2xl glass-pill hover:bg-white/10 font-bold text-xs text-center text-white transition block">
-              {lang === "ru" ? "Начать бесплатно" : "Start Free"}
-            </Link>
-          </div>
-
-          {/* Pro Plan */}
-          <div className="glass-card-dark p-8 rounded-3xl space-y-6 border-2 border-[#0064FF] relative glow-blue flex flex-col justify-between">
-            <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-[#0064FF] text-white text-[10px] font-bold tracking-wider font-pixel">
-              MOST POPULAR
-            </span>
-            <div className="space-y-4">
-              <h3 className="font-bold text-xl text-white">Business Pro</h3>
-              <div className="text-4xl font-extrabold font-outfit text-white">
-                {billingCycle === "annual" ? "12,000 ₸" : "15,000 ₸"}
-                <span className="text-xs font-normal text-slate-400">/ мес</span>
+              <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-lg text-slate-300">
+                ⤛
               </div>
-              <p className="text-xs text-slate-400">
-                {lang === "ru" ? "Для активных отделов маркетинга и стартапов." : "Designed for marketing teams and growing brands."}
+              <div>
+                <h3 className="text-3xl font-extrabold font-outfit text-white">Free</h3>
+                <p className="text-xs text-slate-400 mt-1">$0, no card required</p>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                For individuals and creators to make sense of campaign briefs, TikTok analytics, and creator matching.
               </p>
-              <ul className="space-y-3 pt-6 border-t border-white/5 text-xs text-slate-300">
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#0064FF]" /> Безлимитный Gemini AI-матчинг</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#0064FF]" /> TikTok OAuth верификация аудитории</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#0064FF]" /> До 15 активных Escrow-сделок</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#0064FF]" /> Приоритетный саппорт 24/7</li>
-              </ul>
+              
+              <Link
+                href="/register?role=INFLUENCER"
+                className="w-full py-3.5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold text-xs transition flex items-center justify-center"
+              >
+                Try Jeli free
+              </Link>
+
+              <div className="pt-4 border-t border-white/5 space-y-3">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-pixel">WHAT&apos;S INCLUDED</p>
+                <ul className="space-y-2.5 text-xs text-slate-300">
+                  <li className="flex items-center gap-2">
+                    <span className="text-slate-500">■</span>
+                    <span>One channel to automatically classify your voice of creator data</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-slate-500">■</span>
+                    <span>One project to analyze customer calls, TikTok clips, and surveys</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-slate-500">■</span>
+                    <span>Chat with and summarize your data to uncover trends</span>
+                  </li>
+                </ul>
+              </div>
             </div>
-            <Link href="/register?role=BRAND" className="w-full py-3.5 rounded-2xl bg-[#0064FF] hover:bg-blue-600 font-bold text-xs text-center text-white transition block">
-              {lang === "ru" ? "Подключить Pro" : "Upgrade to Pro"}
-            </Link>
           </div>
 
-          {/* Enterprise Plan */}
-          <div className="glass-card-dark p-8 rounded-3xl space-y-6 border border-white/10 flex flex-col justify-between">
-            <div className="space-y-4">
-              <h3 className="font-bold text-xl text-white">Enterprise</h3>
-              <div className="text-4xl font-extrabold font-outfit text-white">Custom</div>
-              <p className="text-xs text-slate-400">
-                {lang === "ru" ? "Для крупных компаний и рекламных агентств." : "For agencies and large corporate brands."}
-              </p>
-              <ul className="space-y-3 pt-6 border-t border-white/5 text-xs text-slate-300">
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#0064FF]" /> Персональный менеджер кампаний</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#0064FF]" /> White-label отчётность в PDF</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#0064FF]" /> API доступ & Кастомные контракты</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#0064FF]" /> Безналичный расчет для юр. лиц</li>
-              </ul>
+          {/* Card 2: Enterprise / Pro Plan (Firm Blue Accent Colors) */}
+          <div className="bg-[#0A0D14] border-2 border-[#0064FF] rounded-3xl p-8 space-y-6 flex flex-col justify-between relative shadow-2xl shadow-blue-600/20">
+            
+            <div className="absolute -top-3.5 right-8 bg-[#0064FF] text-white text-[10px] font-pixel font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-lg">
+              RECOMMENDED FOR BRANDS
             </div>
-            <a href="mailto:support@jeli.kz" className="w-full py-3.5 rounded-2xl glass-pill hover:bg-white/10 font-bold text-xs text-center text-white transition block">
-              Contact Sales
-            </a>
+
+            <div className="space-y-4">
+              <div className="w-10 h-10 rounded-2xl bg-[#0064FF]/20 border border-[#0064FF]/40 flex items-center justify-center text-lg text-[#0064FF]">
+                ⬡
+              </div>
+              <div>
+                <h3 className="text-3xl font-extrabold font-outfit text-white">Enterprise / Pro</h3>
+                <p className="text-xs text-[#0064FF] font-bold mt-1">
+                  {billingCycle === "monthly" ? "25,000 ₸ / month" : "20,000 ₸ / month (Billed annually)"}
+                </p>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                For organizations scaling creator campaigns, securing budget via 100% Escrow, and standardizing across marketing teams.
+              </p>
+              
+              <Link
+                href="/register?role=BRAND"
+                className="w-full py-3.5 rounded-2xl bg-[#0064FF] hover:bg-blue-600 text-white font-bold text-xs transition shadow-xl shadow-blue-600/30 flex items-center justify-center glow-blue"
+              >
+                Contact sales
+              </Link>
+
+              <div className="pt-4 border-t border-white/5 space-y-3">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[#0064FF] font-pixel">EVERYTHING IN FREE, PLUS</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-300">
+                  <ul className="space-y-2.5">
+                    <li className="flex items-center gap-2">
+                      <span className="text-[#0064FF]">■</span>
+                      <span>Unlimited Agents track every creator signal</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-[#0064FF]">■</span>
+                      <span>Unlimited channels & automatic classification</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-[#0064FF]">■</span>
+                      <span>Dashboards visualizing signals 24/7</span>
+                    </li>
+                  </ul>
+                  <ul className="space-y-2.5">
+                    <li className="flex items-center gap-2">
+                      <span className="text-[#0064FF]">■</span>
+                      <span>Unlimited free chat queries in Telegram & WhatsApp</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-[#0064FF]">■</span>
+                      <span>Advanced AI features like semantic search</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-[#0064FF]">■</span>
+                      <span>100% Guaranteed Escrow payment protection</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
           </div>
+
         </div>
+
       </main>
     </div>
   );
